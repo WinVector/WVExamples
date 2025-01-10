@@ -8,19 +8,22 @@ const numberOfLatestPostsToShow = 5;
 ---
 
 {%- css %}{% include "public/css/message-box.css" %}{% endcss %}
+{%- css %}{% include "public/css/hero.css" %}{% endcss %}
 
 {% set postsCount = collections.posts | length %}
 {% set latestPostsCount = postsCount | min(numberOfLatestPostsToShow) %}
 
 <div class="large_hero_container">
-    <img src="public/img/WVLogoSmall.png" alt="Win Vector Logo">
+    <img src="/img/WVLogoSmall.png" alt="Win Vector logo"
+	      style="border: 2px solid #007d58">
     <h1>Win Vector Examples</h1>
 </div>
 
 <br>
 
+
 <div class="message-box">
-<h3>Latest {{ latestPostsCount }} Post{% if latestPostsCount != 1 %}s{% endif %}</h3>
+<h3 data-ha-exclude>Latest Post{% if latestPostsCount != 1 %}s{% endif %}</h3>
 
 {% set postslist = collections.posts | head(-1 * numberOfLatestPostsToShow) %}
 {% set postslistCounter = postsCount %}

@@ -11,7 +11,8 @@
 		"start-ghpages": "npx @11ty/eleventy --pathprefix=/WVExamples/ --serve --quiet",
 		"debug": "cross-env DEBUG=Eleventy* npx @11ty/eleventy",
 		"debugstart": "cross-env DEBUG=Eleventy* npx @11ty/eleventy --serve --quiet",
-		"benchmark": "cross-env DEBUG=Eleventy:Benchmark* npx @11ty/eleventy"
+		"benchmark": "cross-env DEBUG=Eleventy:Benchmark* npx @11ty/eleventy",
+		"deploy": "gh-pages -d _site --nojekyll"
 	},
 	"repository": {
 		"type": "git",
@@ -36,6 +37,7 @@
 		"@11ty/eleventy-plugin-rss": "^2.0.2",
 		"@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
 		"cross-env": "^7.0.3",
+		"gh-pages": "^6.3.0",
 		"luxon": "^3.5.0",
 		"markdown-it-footnote": "^4.0.0",
 		"markdown-it-mathjax3": "^4.3.2",

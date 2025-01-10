@@ -1,14 +1,10 @@
 ---
 title: Partial Pooling
-description: An introduction to partial pooling in python
+author: John Mount
 date: 2023-04-02
 tags: ["partial pooling", "python"]
+source: https://github.com/WinVector/WVExamples/tree/main/PartialPooling
 ---
-
-<br/>[John Mount](https://win-vector.com/john-mount/)
-<br/>[Win Vector LLC](https://win-vector.com) ([blog](https://win-vector.com/blog-2/))
-
-**TODO: add author and source link**
 
 Much of data science is merely taking averages to estimate expected values. 
 

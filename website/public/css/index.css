@@ -273,7 +273,6 @@ header {
 
 /* Tags list */
 .post-metadata {
-	display: inline-flex;
 	flex-wrap: wrap;
 	gap: .5em;
 	list-style: none;
@@ -282,5 +281,13 @@ header {
 }
 .post-metadata time {
 	margin-right: 1em;
+}
+.taglist {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: .5em;
+	list-style: none;
+	padding: 0;
+	margin: 0;
 }
 

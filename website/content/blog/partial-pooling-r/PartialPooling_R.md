@@ -3,6 +3,7 @@ title: 'Partial Pooling for Lower Variance Variable Encoding'
 author: "Nina Zumel"
 date: 2025-01-08
 tags: ["partial pooling", "R"]
+source: https://github.com/WinVector/WVExamples/tree/main/PartialPooling_R
 ---
 
 <figure align="center">

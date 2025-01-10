@@ -48,7 +48,7 @@ Once the article looks to your satisfaction:
 
 1. Kill the watcher process that runs the previewer. 
 
-2. Push/commit your changes.
+2. Commit/push your changes.
 
 3. Delete the `_site` directory in `website`. This is really a belt-and-suspenders move. It prevents some bad relative url mistakes.
 
@@ -57,14 +57,14 @@ Once the article looks to your satisfaction:
 npm run build
 ```
 
-(This sets the root directory at `/WVExamples/` rather than `/`, which is what we want.)
+(This sets the root directory of the website to `/WVExamples/` rather than `/`, which is what we want.)
 
 5. Push the website to the `gh-pages` branch.
 ```
 npm run deploy
 ```
 
-This copies `_site` to the `gh-pages` branch, then commmits/pushes it. The push triggers a github action to deploy the new website. You can see the progress of the github action by going to the `WVExamples` repo at github, then clicking on the **Actions** tab at the top.
+This copies `_site` to the `gh-pages` branch, then commits/pushes it. The push triggers a github action to deploy the new website. You can see the progress of the github action by going to the `WVExamples` repo at github, then clicking on the **Actions** tab at the top.
 
 Once the deployment is done, the website is live at
 `winvector.github.io/WVExamples`.

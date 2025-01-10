@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+	
+	<url>
+		<loc>https://winvector.github.io/WVExamples/blog/partial-pooling/PartialPooling/</loc>
+		<lastmod>2023-04-02</lastmod>
+	</url>
+	
+	<url>
+		<loc>https://winvector.github.io/WVExamples/blog/partial-pooling-r/PartialPooling_R/</loc>
+		<lastmod>2025-01-08</lastmod>
+	</url>
+	
+	<url>
+		<loc>https://winvector.github.io/WVExamples/about/</loc>
+		<lastmod>2025-01-08</lastmod>
+	</url>
+	
+	<url>
+		<loc>https://winvector.github.io/WVExamples/blog/</loc>
+		<lastmod>2025-01-08</lastmod>
+	</url>
+	
+	<url>
+		<loc>https://winvector.github.io/WVExamples/</loc>
+		<lastmod>2025-01-08</lastmod>
+	</url>
+	
+	<url>
+		<loc>https://winvector.github.io/WVExamples/tags/</loc>
+		<lastmod>2025-01-08</lastmod>
+	</url>
+	
+	<url>
+		<loc>https://winvector.github.io/WVExamples/feed/feed.xml</loc>
+		<lastmod>2025-01-10</lastmod>
+	</url>
+</urlset>

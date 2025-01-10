@@ -1,0 +1,15 @@
+/* For displaying image and description*/
+
+.large_hero_container {
+	text-align: center;
+	padding-top: 100px;
+}
+
+.large_hero_container img {
+	max-width: 250px;
+	border-radius: 50%;
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+

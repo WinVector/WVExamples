@@ -6,9 +6,21 @@ const eleventyNavigation = {
 
 const numberOfLatestPostsToShow = 5;
 ---
+
+{%- css %}{% include "public/css/message-box.css" %}{% endcss %}
+
 {% set postsCount = collections.posts | length %}
 {% set latestPostsCount = postsCount | min(numberOfLatestPostsToShow) %}
-<h1>Latest {{ latestPostsCount }} Post{% if latestPostsCount != 1 %}s{% endif %}</h1>
+
+<div class="large_hero_container">
+    <img src="public/img/WVLogoSmall.png" alt="Win Vector Logo">
+    <h1>Win Vector Examples</h1>
+</div>
+
+<br>
+
+<div class="message-box">
+<h3>Latest {{ latestPostsCount }} Post{% if latestPostsCount != 1 %}s{% endif %}</h3>
 
 {% set postslist = collections.posts | head(-1 * numberOfLatestPostsToShow) %}
 {% set postslistCounter = postsCount %}
@@ -18,6 +30,7 @@ const numberOfLatestPostsToShow = 5;
 {% if morePosts > 0 %}
 <p>{{ morePosts }} more post{% if morePosts != 1 %}s{% endif %} can be found in <a href="blog.njk">the archive</a>.</p>
 {% endif %}
+</div>
 
 {# List every content page in the project #}
 {#

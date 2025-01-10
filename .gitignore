@@ -1,0 +1,14 @@
+.DS_Store
+*~
+.Rhistory
+.RHistory
+!.gitignore
+\#*
+.Rproj.user
+.Rapp.history
+.ipynb_checkpoints
+log4j.spark.log*
+derby.log
+*.Rproj
+__pycache__
+

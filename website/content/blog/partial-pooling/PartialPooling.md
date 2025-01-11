@@ -21,7 +21,7 @@ Take as our example problem: we want to estimate the ideal expected value of obs
 [Dr. Nina Zumel](https://win-vector.com/author/nzumel/) has two excellent articles on exactly this problem:
 
   * [Custom Level Coding in vtreat](https://win-vector.com/2017/09/25/custom-level-coding-in-vtreat/)
-  * [Partial Pooling for Lower Variance Variable Encoding](https://win-vector.com/2017/09/28/partial-pooling-for-lower-variance-variable-encoding/)
+  * [Partial Pooling for Lower Variance Variable Encoding](/blog/partial-pooling-r/PartialPooling_R/)
 
 These show how to use the right tools to perform and use the partial pooling analysis, largely in context of the `vtreat` data preparation system ([R version](https://CRAN.R-project.org/package=vtreat), [Python version](https://pypi.org/project/vtreat/)).
 

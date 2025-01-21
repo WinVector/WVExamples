@@ -2,7 +2,7 @@
 
 1. Install Node.js -  https://nodejs.org/en/download/.
 
-This installs `npm`, which is what you need to run the site generator.
+This will also install `npm`, which is what you need to run the site generator. Make sure to install the **LTS** (long term support) version. Other (newer) versions have not yet been tested with `npm`.
 
 2. Clone the website repo **main branch only** - 
 ```

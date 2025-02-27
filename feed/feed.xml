@@ -156,7 +156,7 @@ mod_glm &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; glm&lt;span 
 &lt;p&gt;&lt;a href=&quot;https://win-vector.com/author/nzumel/&quot;&gt;Dr. Nina Zumel&lt;/a&gt; has two excellent articles on exactly this problem:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&quot;https://win-vector.com/2017/09/25/custom-level-coding-in-vtreat/&quot;&gt;Custom Level Coding in vtreat&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://win-vector.com/2017/09/28/partial-pooling-for-lower-variance-variable-encoding/&quot;&gt;Partial Pooling for Lower Variance Variable Encoding&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://example.com/WVExamples/blog/partial-pooling-r/PartialPooling_R/&quot;&gt;Partial Pooling for Lower Variance Variable Encoding&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;These show how to use the right tools to perform and use the partial pooling analysis, largely in context of the &lt;code&gt;vtreat&lt;/code&gt; data preparation system (&lt;a href=&quot;https://CRAN.R-project.org/package=vtreat&quot;&gt;R version&lt;/a&gt;, &lt;a href=&quot;https://pypi.org/project/vtreat/&quot;&gt;Python version&lt;/a&gt;).&lt;/p&gt;
 &lt;p&gt;For this note, let&#39;s work on a formula and a synthetic example directly.&lt;/p&gt;

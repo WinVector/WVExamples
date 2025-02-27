@@ -65,11 +65,11 @@ export default async function(eleventyConfig) {
 		},
 		metadata: {
 			language: "en",
-			title: "Blog Title",
-			subtitle: "This is a longer description about your blog.",
-			base: "https://example.com/",
+			title: "Win Vector Examples",
+			subtitle: "A supplement to the main Win Vector blog.",
+			base: "https://winvector.github.io/WVExamples/",
 			author: {
-				name: "Your Name"
+				name: "John Mount and Nina Zumel"
 			}
 		}
 	});

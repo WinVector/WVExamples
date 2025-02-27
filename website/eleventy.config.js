@@ -67,7 +67,7 @@ export default async function(eleventyConfig) {
 			language: "en",
 			title: "Win Vector Examples",
 			subtitle: "A supplement to the main Win Vector blog.",
-			base: "https://winvector.github.io/WVExamples/",
+			base: "https://winvector.github.io/",
 			author: {
 				name: "John Mount and Nina Zumel"
 			}

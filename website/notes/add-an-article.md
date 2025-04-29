@@ -25,7 +25,7 @@ source: https://github.com/WinVector/WVExamples/tree/main/PartialPooling_R
 
 `date` is in YYYY-MM-DD format. If there is only one tag, you don't need the brackets. `source` is optional, but if you have it, it should point to the location of the code directory in `WVExamples`.
 
-5. Fix the links to figures in the `.md`. If the figure is added to the document via html (rather than markdown), you need to add an `alt` tag. It's required.
+5. Fix the links to figures in the `.md`. If the figure is added to the document via html (rather than markdown), you need to add an `alt` tag. It's required. Also some symbols such as double open braces error-out the substitution engine with a cryptic error message (and wrong line number).
 
 ```
 <img src="terraces.jpg" alt="Banaue rice terraces">

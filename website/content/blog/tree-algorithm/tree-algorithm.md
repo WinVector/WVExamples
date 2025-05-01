@@ -363,7 +363,7 @@ def build_initial_free_power_series(degree_bound: int):
     x, y = sp.symbols("x y")
     coef_names = {
         (x_power, y_power): (
-            sp.Symbol("c_{x^{" + str(x_power) + "} y^{+ " + str(y_power) + "}}")
+            sp.Symbol("c_{x^{" + str(x_power) + "} y^{+ " + str(y_power) + "}}"),
             x**x_power * y**y_power,
         )
         for x_power in range(degree_bound + 1)

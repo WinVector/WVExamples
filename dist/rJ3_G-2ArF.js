@@ -47,7 +47,6 @@ class HeadingAnchors extends HTMLElement {
 }
 .${HeadingAnchors.classes.anchor},
 .${HeadingAnchors.classes.placeholder} {
-	display: inline-block;
 	padding: 0 .25em;
 
 	/* Disable selection of visually hidden label */
@@ -104,7 +103,7 @@ class HeadingAnchors extends HTMLElement {
 					anchor.style.positionAnchor = anchorName;
 				}
 
-				heading.appendChild(placeholder);
+				heading.appendChild(placeholder)
 				heading.after(anchor);
 			}
 		});
@@ -163,21 +162,14 @@ class HeadingAnchors extends HTMLElement {
 	}
 
 	getContent() {
-		if(this.hasAttribute(HeadingAnchors.attributes.content)) {
-			return this.getAttribute(HeadingAnchors.attributes.content);
-		}
-		return "#";
+		return this.getAttribute(HeadingAnchors.attributes.content) || "#";
 	}
 
-	// Placeholder nests inside of heading
 	getPlaceholderElement() {
 		let ph = document.createElement("span");
 		ph.setAttribute("aria-hidden", true);
 		ph.classList.add(HeadingAnchors.classes.placeholder);
-		let content = this.getContent();
-		if(content) {
-			ph.textContent = content;
-		}
+		ph.textContent = this.getContent();
 
 		ph.addEventListener("mouseover", (e) => {
 			let placeholder = e.target.closest(`.${HeadingAnchors.classes.placeholder}`);
@@ -195,7 +187,7 @@ class HeadingAnchors extends HTMLElement {
 		anchor.classList.add(HeadingAnchors.classes.anchor);
 
 		let content = this.getContent();
-		anchor.innerHTML = `<span class="${HeadingAnchors.classes.srOnly}">${this.getAccessibleTextPrefix()}: ${heading.textContent}</span>${content ? `<span aria-hidden="true">${content}</span>` : ""}`;
+		anchor.innerHTML = `<span class="${HeadingAnchors.classes.srOnly}">${this.getAccessibleTextPrefix()}: ${heading.textContent}</span><span aria-hidden="true">${content}</span>`;
 
 		anchor.addEventListener("focus", e => {
 			let anchor = e.target.closest(`.${HeadingAnchors.classes.anchor}`);

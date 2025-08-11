@@ -12,32 +12,37 @@
 	</url>
 	
 	<url>
+		<loc>https://winvector.github.io/WVExamples/about/</loc>
+		<lastmod>2025-01-08</lastmod>
+	</url>
+	
+	<url>
+		<loc>https://winvector.github.io/WVExamples/blog/</loc>
+		<lastmod>2025-01-08</lastmod>
+	</url>
+	
+	<url>
+		<loc>https://winvector.github.io/WVExamples/</loc>
+		<lastmod>2025-01-08</lastmod>
+	</url>
+	
+	<url>
+		<loc>https://winvector.github.io/WVExamples/tags/</loc>
+		<lastmod>2025-01-08</lastmod>
+	</url>
+	
+	<url>
 		<loc>https://winvector.github.io/WVExamples/blog/tree-algorithm/</loc>
 		<lastmod>2025-04-29</lastmod>
 	</url>
 	
 	<url>
-		<loc>https://winvector.github.io/WVExamples/about/</loc>
-		<lastmod>2025-04-29</lastmod>
-	</url>
-	
-	<url>
-		<loc>https://winvector.github.io/WVExamples/blog/</loc>
-		<lastmod>2025-04-29</lastmod>
-	</url>
-	
-	<url>
-		<loc>https://winvector.github.io/WVExamples/</loc>
-		<lastmod>2025-04-29</lastmod>
-	</url>
-	
-	<url>
-		<loc>https://winvector.github.io/WVExamples/tags/</loc>
-		<lastmod>2025-04-29</lastmod>
+		<loc>https://winvector.github.io/WVExamples/blog/opt-overfit/opt_example/</loc>
+		<lastmod>2025-08-11</lastmod>
 	</url>
 	
 	<url>
 		<loc>https://winvector.github.io/WVExamples/feed/feed.xml</loc>
-		<lastmod>2025-05-01</lastmod>
+		<lastmod>2025-08-11</lastmod>
 	</url>
 </urlset>

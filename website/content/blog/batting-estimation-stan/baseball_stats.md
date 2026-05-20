@@ -1,45 +1,24 @@
-```python
-import json
-import logging
-import numpy as np
-import pandas as pd
-from cmdstanpy import CmdStanModel
-from plotnine import *
-from sklearn import linear_model
+---
+title: "Who's the Best Batter? Estimating Probabilities from Unevenly Collected Data"
+author: "Nina Zumel"
+date: 2026-05-20
+tags: ["probabilistic  modeling", "python", "stan", "Bayesian data analysis"]
+source: https://github.com/WinVector/WVExamples/tree/main/BattingEstimation_Stan
+---
 
-rng = np.random.default_rng(2026)
+In this article, we look at the problem of estimating and comparing probabilities about a population of subjects from unevenly collected observations. Some examples might include:
 
-# quiet down Stan
-logger = logging.getLogger("cmdstanpy")
-logger.addHandler(logging.NullHandler())
+* The perceived quality of a movie (how often is a movie positively reviewed) when some movies have far more reviews than others.
+* The effectiveness of various ad campaigns, when some compaigns have had more exposure than others.
+* The efficacy of a certain medical procedure by hospital, when some hospitals have had more cases than others.
 
-# set plot size
-# plotnine.options.figure_size = (16, 8)
-
-# seed pseudo-rng for repeatability of data generation
-# Stan uses its own seeds and state
-rng = np.random.default_rng(2025)
-
-# define directories
-datadir = "data/"
-standir = "stan_models/"
-stan_datadir = "stan_data/"
-
-```
-
-# Who's the best batter? Estimating probabilities with unevenly collected data
-
-In this article, we look at the problem of estimating the success rates of a population of subjects (and comparing these success rates), when the observations of these subjects have been collected unevenly. Some examples might include:
-
-* The perceived quality of a movie (how often is a movie positively reviewed) when some movies have far more reviews than others
-* The conversion rate of various ad campaigns, when some compaigns have had more exposure than others
-* The success rates of a certain medical procedure by hospital, when some hospital has had more cases than others
-
-For our specific task, we'll try to estimate the "innate" batting ability (the probability of making a hit when at bat)[^1] of major league baseball players in 2023 ([SABR Database](https://sabr.org/lahman-database/); [R Interface to SABR](https://cdalzell.github.io/Lahman/)). For the sake of this article, we will take this single season of data as everything that we know about these players and their batting statistics.
+For our specific task, we'll try to estimate the "innate" batting ability (the probability of making a hit when at bat)[^1] of major league baseball players in 2023[^2]. For the sake of this article, we will take this single season of data as everything that we know about these players and their batting statistics.
 
 First, let's take a quick look at the data.
 
-[^1]: By *innate*, I don't mean some kind of "natural-born" ability; a player's batting ability is no doubt honed by training and practice. I merely use the word *innate* to underline that the probability of a given player making a hit when at bat is not necessarily the same as the *observed* rate at which they made hits during a season.
+[^1]: By *innate*, I don't mean some kind of "natural-born" ability; a player's batting ability is no doubt honed by training and practice. I merely use the word *innate* to emphasize that the probability of a given player making a hit is not necessarily the same as the *observed* rate at which they made hits during a season.<br>  
+
+[^2]: Data from the [Lahman Baseball Database](https://sabr.org/lahman-database/), currently available from the Society for American Baseball Research (SABR). The [Lahman R package](https://cdalzell.github.io/Lahman/) provides an R interface to the database, as well.<br>
 
 
 ```python
@@ -157,9 +136,6 @@ battingf
 <p>656 rows × 4 columns</p>
 </div>
 
-
-
-
 ```python
 nplayers = battingf.shape[0]
 print(f'Population of {nplayers} players.')
@@ -172,47 +148,30 @@ mean_atbat = battingf['atbat'].mean()
 std_atbat = battingf['atbat'].std()
 print(f'Mean at bats: {mean_atbat:.2f}, standard deviation {std_atbat:.2f}')
 ```
-
+```
     Population of 656 players.
     Mean batting average: 0.23, standard deviation 0.07
     Mean at bats: 250.64, standard deviation 192.45
-
+```
 
 Given this information, how do we estimate players' batting ability? 
 
 You may be tempted to simply use a player's observed batting average as an estimate of their batting skill. One issue with this is that not all players get the same number of at-bats. Let's look at the batting averages for all the players, sorted by their number of times at bat. The horizontal line on the graph represents the mean batting average of the population.
-
-
-```python
-mean_ba = np.mean(battingf['batting_avg'])
-(
-    ggplot(battingf, aes(x="atbat", y="batting_avg")) +
-    geom_point() + 
-    geom_hline(yintercept = mean_ba, color="darkblue") + 
-    scale_x_continuous(name = "times at bat") +  
-    ggtitle("Batting Averages, 2023")
-)
-```
-
-
     
-![png](baseball_stats_files/baseball_stats_5_0.png)
-    
+![Scatterplot of batting averages vs. times at bat, MLB 2023 season](baseball_stats_5_0.png)
+<p class="caption">Batting averages versus times at bat. Dark blue horizontal line represents population mean batting average.</p>    
 
 
-As you can see, the number of at-bats for players in 2023 varied widely; some players were up hundreds of times, and some fewer than ten times. 
-For players with a lot of at-bats, their observed batting average is probabably a good estimate of their innate batting ability. But for players with fewer at-bats, their observed batting average is more likely to be an over or under estimate of their ability. 
+As you can see, the number of at-bats for players in 2023 varied widely; some players were up hundreds of times, and some fewer than ten times.  For players with a lot of at-bats, their observed batting average is probabably a good estimate of their innate batting ability. But for players with fewer at-bats, their observed batting average is more likely to be an over or under estimate of their ability. 
 
-We can make this point dramatically by trying to use our naive batting ability estimates to ask the question, **_Who are the top 10 batters_**?
+## Finding the Top 10 Batters
 
+We can make this point dramatically by using our naive batting ability estimates to answer the question, **_Who are the top 10 batters_**?
 
 ```python
 naive_top10 = battingf.nlargest(10, 'batting_avg')
 naive_top10
 ```
-
-
-
 
 <div>
 <style scoped>
@@ -317,13 +276,17 @@ naive_top10
 
 Do you trust this ranking? Probably not---notice that most of the players in the top ten using this naive measure have actually been at bat very few times, and their batting averages are unrealistically high. Remember: the average batting average in the league for this season is 0.23, and the standard deviation is small. Batting averages of 1.0 or even 0.5 are highly improbable estimates of actual player ability.
 
-This is analogous to sorting the rankings of a product on an online shopping site. Which assessment would you consider more reliable: one with a five-star average rating calculated from only one or two ratings, or one with a 4.5 star rating calculated from 200 ratings? Personally, I would be more likely to trust the assesment of the second product.
+This is analogous to sorting the rankings of a product on an online shopping site. Which assessment would you consider more reliable: 
+* one with a five-star average rating calculated from only one or two ratings, 
+* or one with a 4.5 star rating calculated from 200 ratings? 
+
+Personally, I would be more likely to trust the assesment of the second product.
 
 Given that our observations of the players are so uneven, is there a better way estimate how good a batter each player really is?
 
-We would like a method that handles players with very few observations in a reasonable way. If a player has been at bat only once, their observed batting average is either 1 or 0; either they look perfect, or they look terrible. Since they are most likely neither, we'd like to assume a reasonable estimate of their batting ability, one we can use while we are waiting for more data. And of course, we want a method where the estimate improves as more data becomes available.
+We would like a method that handles players with very few observations in a reasonable way. If a player has been at bat only once, their observed batting average is either 1 or 0: either they look perfect, or they look terrible. Since they are most likely neither, we'd like to assume a reasonable estimate of their batting ability, one we can use while we are waiting for more data. And of course, we want a method where the estimate improves as more data becomes available.
 
-## Estimating batting ability with probabilistic modeling
+## Estimating Batting Ability with Probabilistic Modeling
 
 One approach that robustly handles players with few at-bats is *probabilistic modeling*. In this article, we will implement a probabilistic model for the batting ability problem using [Stan](https://mc-stan.org/). We won't explain the Stan code in depth, but we will try to explain what the model is doing.
 
@@ -331,145 +294,81 @@ The idea behind this model is that a player's empirical batting performance is m
 
 ![Model of Batting Process](batting_model.png)
 
-**Caption: Our model of the batting process. An individual batter has a given (unobservable) batting ability, drawn from the distribution of batting abilities for the population. For the player's `n` at-bats, we observe the number of hits and misses during play.**
+<p class="caption">Working model of the hit generation process. An individual batter has a given (unobservable) batting ability, drawn from the distribution of batting abilities for the population. For the player's <code>n</code> at-bats, we observe the number of hits and misses during play.</caption>
 
 In order to estimate player batting ability, which we cannot directly observe, we will define a probabilistic process to "explain" the observable batting performance in terms of the unobservable player ability.
 
 Specifically, we'll model each player as a coin, where a hit is "heads", and the number of at-bats is the number of flips. We'll call the (unknown) probability of coming up heads (getting a hit) `gamma`. Then we can model each player as a binomial:
 
 ```
-hits_i ~ binomial(atbat_i, gamma_i)
+      hits_i ~ binomial(atbat_i, gamma_i)
 ```
 
 In other words, `gamma` is the player's innate batting ability.
 
-We'll further assume that the player `gamma`s are distributed around some (also unknown) "global player batting ability." The idea here is that all the players in some sense come from the same population, so their batting performances are somewhat similar. This implies that player batting abilities tend to cluster around some average batting ability, and very high (or low) abilities are unlikely. 
+We'll further assume that the player `gamma`s are distributed around some (also unknown) "global player batting ability." The idea here is that all the players come from the same population, so their batting performances are somewhat similar. This implies that player batting abilities tend to cluster around some average batting ability, and very high (or low) abilities are unlikely. 
 
 This is *only* an assumption, but we consider it plausible because of real-life observations like "batting averages for professional players tend to be around 0.25ish, and super high batting averages are unlikely"---an observation we can back up with the data.
 
-
-```python
-(
-    ggplot(battingf, aes(x="batting_avg")) + 
-    geom_density() + geom_vline(xintercept=mean_ba, color="darkblue") + 
-    ggtitle(f"Distribution of batting averages, mean = {mean_ba:.2f}")
-)
-```
-
-
     
-![png](baseball_stats_files/baseball_stats_10_0.png)
-    
+![Distribution of batting averages in the 2023 season](baseball_stats_10_0.png)
+<p class="caption">Distribution of observed batting averages for the 2023 MLB season.</caption>
 
 
-An advantage of probabilistic modeling is that it allows us to express such assumptions (or other plausible ones) and incorporate them into our analysis in a principled way. With more common frequentist analyses (like our naive approach), we don't have a way to express notions like "player abilities are in a tight, not uniform distribution," without having to resort to ad-hoc rules such as "only consider batters who have more than 100 at-bats."
+An advantage of probabilistic modeling is that it allows us to incorporate these types of assumptions or domain knowledge into our analysis in a principled way. With more common frequentist analyses, like the above naive approach, we don't have a way to express notions like "player abilities are in a tight, non-uniform distribution," without resorting to ad-hoc rules such as "only consider batters who have more than 100 at-bats."
 
-To continue: we want to model the "global player batting ability" as a distribution from which individual player gammas are drawn. Since the players are binomial, we'll assume that the gammas are distributed as a beta distribution. 
+To continue: we want to model the "global player batting ability" as a distribution from which individual player `gamma`s are drawn. Since the players are binomial, we'll assume that the `gamma`s are distributed as a beta distribution. 
 
 ```
-gamma ~ beta(a, b); 
+      gamma ~ beta(a, b)
 ```
 
 In Bayesian parlance, the distribution `beta(a, b)` represents the *priors* on `gamma` (player batting ability). For a player with only a few at-bats, there is little information on their individual ability, so the model will estimate that their batting ability is near some average batting ability. For players with many at-bats, the model will have enough information to pull the estimate away from the grand mean.
 
-Intuitively, the  parameters `a` and `b` represent `a` "pseudo-hits" for `a + b` "pseudo-atbats". The larger `a + b` is, the more observations will be required to pull a player's estimated ability away from the 
+Intuitively, the  parameters `a` and `b` represent `a` "pseudo-hits" for `a+b` "pseudo-atbats". The larger `a+b` is, the more observations will be required to pull a player's estimated ability away from the 
 grand mean (`a/(a+b)`). In other words, this formulation smooths all the estimated batting averages towards some (estimated) grand mean. The quantity `a+b` specifies the strength of the smoothing.
 
-We can control how much we smooth to the mean, and what the mean is, by explicitly picking `a+b`. In this model, however, we will use Stan to estimate `a` and `b` from the data.
+We can control how much we smooth to the mean, and what the mean is, by explicitly picking `a` and `b`. In this model, however, we will use Stan to estimate `a` and `b` from the data.
 
 Below is the code for the Stan model. Don't worry if you can't read it; the explanation above and the comments in the code should be sufficient.
 
 
 ```python
 stan_model_src = """
-data {
+data {                                               // this block describes the training data
   int<lower=1> n_players;                            // number of players observed
   array[n_players] int<lower=0> hits;                // number of hits - needs to be integer type because of binomial call
   array[n_players] int<lower=0> atbat;               // number of at-bats - needs to be integer type because of binomial call
 }
-parameters {
+parameters {                                           // this block declares the parameters to be estimated
   vector<lower=0, upper=1>[n_players] gamma;           // unobserved "true" batting abilities
   real<lower=0> a;                                     // pseudo-hits
   real<lower=0> b;                                     // pseudo-misses
 }
-model {
-  // relations between parameters and data
+model {                                             // this block describes the relations between parameters and data
   gamma ~ beta(a, b);                               // distribution of unobservable batting ability
   hits ~ binomial(atbat, gamma);                    // relation of hits to per-player ability
 }
 """
-stan_file_name: str = standir + "batting_model.stan"
-with open(stan_file_name, "w", encoding="utf8") as file:
-    file.write(stan_model_src)
 ```
-
-
-```python
-# build up Stan data
-
-stan_data = {
-    'n_players': battingf.shape[0],
-    'hits': list(battingf['hits']),
-    'atbat': list(battingf['atbat']),
-}
-data_file_name: str = stan_datadir + "batting_model.data.json"
-with open(data_file_name, "w", encoding="utf8") as file:
-    json.dump(stan_data, file)
-```
-
-
-```python
-model = CmdStanModel(stan_file=stan_file_name)
-fit = model.sample(
-    data=data_file_name,
-    iter_warmup=1000,
-    iter_sampling=1000,
-    show_progress=True,
-    show_console=False,
-)
-# get the samples
-fit_Stan = fit.draws_pd().reset_index(drop=True, inplace=False)  # force copy just in case
-```
-
-
-    chain 1 |          | 00:00 Status
-
-
-
-    chain 2 |          | 00:00 Status
-
-
-
-    chain 3 |          | 00:00 Status
-
-
-
-    chain 4 |          | 00:00 Status
-
-
-                                                                                                                                                                                                                                                                                                                                    
-
 
 Unlike most modeling systems, Stan does not return point estimates of the parameters it is trying to fit. It instead uses Monte Carlo sampling to jointly generate sets of parameters (called samples) that are consistent with the training data. Each of these samples (4000 of them, in this case) represents a "possible world" that could generate the observed data. We can use these possible worlds to not only calculate point estimates of the parameters we want, but also uncertainty ranges around those estimates.
 
-Behind the scenes, we have fit the model, and saved Stan's generated samples into a data frame called `fit_Stan`.
+Behind the scenes, we have fit the model, and saved Stan's generated samples into a data frame named `fit_Stan`. For all the details, see the source code linked at the top of this article.
 
 
 ```python
 fit_Stan.shape
 ```
 
+```
+(4000, 668)
+```
 
 
+## Estimate of the Priors
 
-    (4000, 668)
-
-
-
-## Estimate of the priors
-
-Let's look at Stan's estimates for `a` and `b`. Do we get reasonable distributions of pseudo-observations and global batting ability?
-How close are the batting ability estimates to the observed mean batting average?
+Let's look at Stan's estimates for `a` and `b`. Do we get reasonable distributions of pseudo-observations and global batting ability? 
 
 As a diagnostic on the model, we would like to see that the distributions of both `a` and `b` are unimodal (which they are, but for brevity the plots are omitted). We'd also like to see that the mean of the beta distribution is near the observed mean batting average in every sample.
 
@@ -488,27 +387,20 @@ print(f"""
 """)
 ```
 
-    
-          Mean pseudo observation estimate: 427.296; 
-          Mean global batting ability estimate: 0.244, compared to observed mean batting average 0.227
-    
+```    
 
+Mean pseudo observation estimate: 434.612; 
+Mean global batting ability estimate: 0.244, compared to observed mean batting average 0.227
 
+```    
 
-```python
-ggplot(abframe, aes(x="global_ba")) + geom_density() + ggtitle("distribution of global batting average estimate")
-```
-
-
-    
-![png](baseball_stats_files/baseball_stats_19_0.png)
+![Distributions of beta means and pseudo-observations from Stan estimates](baseball_stats_20_0.png)
     
 
 
-The mean of beta is generally around 0.24, which is close to the observed mean batting average of 0.23. 
-The large number of pseudo-observations corresponds to beta distributions with fairly low variance, which is again consistent with our empirical observation. It also means that there will be a lot of smoothing on the estimates.
+The mean of `beta` is generally between 0.24 and 0.25, which is not far from the observed mean batting average of 0.23. The large number of pseudo-observations corresponds to beta distributions with fairly low variance, which is again consistent with our empirical observation. It also means that there will be a lot of smoothing on the estimates.
 
-## Estimating batting ability
+## Estimating Batting Ability
 
 Now let's get all the samples of player gammas.
 
@@ -546,143 +438,59 @@ batting_estimates
       <th>acunaro01</th>
       <th>adamewi01</th>
       <th>adamsjo03</th>
-      <th>adamsri03</th>
-      <th>adelljo01</th>
-      <th>adriaeh01</th>
-      <th>aguilje01</th>
       <th>...</th>
-      <th>wongko01</th>
-      <th>wynnsau01</th>
-      <th>yastrmi01</th>
-      <th>yelicch01</th>
-      <th>yepezju01</th>
-      <th>yoshima02</th>
-      <th>youngja02</th>
-      <th>youngja03</th>
-      <th>zavalse01</th>
-      <th>zuninmi01</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>0.236159</td>
-      <td>0.209769</td>
-      <td>0.252895</td>
-      <td>0.331512</td>
-      <td>0.231861</td>
-      <td>0.221899</td>
-      <td>0.274597</td>
-      <td>0.220187</td>
-      <td>0.217476</td>
-      <td>0.247799</td>
+      <td>0.255413</td>
+      <td>0.248422</td>
+      <td>0.258750</td>
+      <td>0.308997</td>
+      <td>0.228818</td>
+      <td>0.211759</td>
       <td>...</td>
-      <td>0.242508</td>
-      <td>0.267151</td>
-      <td>0.241665</td>
-      <td>0.297465</td>
-      <td>0.277252</td>
-      <td>0.254850</td>
-      <td>0.215778</td>
-      <td>0.273919</td>
-      <td>0.213626</td>
-      <td>0.221497</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>0.254301</td>
-      <td>0.276815</td>
-      <td>0.262079</td>
-      <td>0.276653</td>
-      <td>0.223491</td>
-      <td>0.245711</td>
-      <td>0.245537</td>
-      <td>0.263732</td>
-      <td>0.262245</td>
-      <td>0.231878</td>
+      <td>0.244398</td>
+      <td>0.217937</td>
+      <td>0.251756</td>
+      <td>0.298012</td>
+      <td>0.226152</td>
+      <td>0.250242</td>
       <td>...</td>
-      <td>0.204481</td>
-      <td>0.209283</td>
-      <td>0.240290</td>
-      <td>0.233731</td>
-      <td>0.200448</td>
-      <td>0.287957</td>
-      <td>0.271286</td>
-      <td>0.224508</td>
-      <td>0.227904</td>
-      <td>0.236192</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>0.237774</td>
-      <td>0.202855</td>
-      <td>0.247976</td>
-      <td>0.317224</td>
-      <td>0.223387</td>
-      <td>0.233426</td>
-      <td>0.264192</td>
-      <td>0.212201</td>
-      <td>0.223418</td>
-      <td>0.249744</td>
+      <td>0.243953</td>
+      <td>0.258032</td>
+      <td>0.263147</td>
+      <td>0.296633</td>
+      <td>0.230742</td>
+      <td>0.226632</td>
       <td>...</td>
-      <td>0.238321</td>
-      <td>0.267640</td>
-      <td>0.241903</td>
-      <td>0.294343</td>
-      <td>0.274822</td>
-      <td>0.248272</td>
-      <td>0.203483</td>
-      <td>0.266501</td>
-      <td>0.216829</td>
-      <td>0.237824</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>0.256095</td>
-      <td>0.280523</td>
-      <td>0.260821</td>
-      <td>0.280272</td>
-      <td>0.235922</td>
-      <td>0.238802</td>
-      <td>0.235931</td>
-      <td>0.267297</td>
-      <td>0.253374</td>
-      <td>0.229589</td>
+      <td>0.249291</td>
+      <td>0.242690</td>
+      <td>0.261040</td>
+      <td>0.310948</td>
+      <td>0.230661</td>
+      <td>0.217918</td>
       <td>...</td>
-      <td>0.211445</td>
-      <td>0.206317</td>
-      <td>0.235951</td>
-      <td>0.228893</td>
-      <td>0.201917</td>
-      <td>0.283589</td>
-      <td>0.277336</td>
-      <td>0.223785</td>
-      <td>0.231298</td>
-      <td>0.222376</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>0.264856</td>
-      <td>0.261657</td>
-      <td>0.263420</td>
-      <td>0.315670</td>
-      <td>0.230888</td>
-      <td>0.236793</td>
-      <td>0.252360</td>
-      <td>0.242478</td>
-      <td>0.206340</td>
-      <td>0.266352</td>
+      <td>0.237667</td>
+      <td>0.251283</td>
+      <td>0.240370</td>
+      <td>0.290025</td>
+      <td>0.222474</td>
+      <td>0.273592</td>
       <td>...</td>
-      <td>0.225202</td>
-      <td>0.274650</td>
-      <td>0.229674</td>
-      <td>0.282011</td>
-      <td>0.223278</td>
-      <td>0.272895</td>
-      <td>0.206819</td>
-      <td>0.241059</td>
-      <td>0.235670</td>
-      <td>0.228535</td>
     </tr>
     <tr>
       <th>...</th>
@@ -693,140 +501,7 @@ batting_estimates
       <td>...</td>
       <td>...</td>
       <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
     </tr>
-    <tr>
-      <th>3995</th>
-      <td>0.253545</td>
-      <td>0.244569</td>
-      <td>0.276877</td>
-      <td>0.303954</td>
-      <td>0.213353</td>
-      <td>0.251170</td>
-      <td>0.265480</td>
-      <td>0.225302</td>
-      <td>0.261119</td>
-      <td>0.196203</td>
-      <td>...</td>
-      <td>0.196982</td>
-      <td>0.235612</td>
-      <td>0.257314</td>
-      <td>0.241572</td>
-      <td>0.208169</td>
-      <td>0.255695</td>
-      <td>0.213576</td>
-      <td>0.228342</td>
-      <td>0.204193</td>
-      <td>0.210340</td>
-    </tr>
-    <tr>
-      <th>3996</th>
-      <td>0.241263</td>
-      <td>0.232127</td>
-      <td>0.228427</td>
-      <td>0.295329</td>
-      <td>0.252916</td>
-      <td>0.222518</td>
-      <td>0.239046</td>
-      <td>0.260487</td>
-      <td>0.239470</td>
-      <td>0.278681</td>
-      <td>...</td>
-      <td>0.238573</td>
-      <td>0.222199</td>
-      <td>0.220869</td>
-      <td>0.283524</td>
-      <td>0.259816</td>
-      <td>0.275169</td>
-      <td>0.256728</td>
-      <td>0.264117</td>
-      <td>0.223195</td>
-      <td>0.244809</td>
-    </tr>
-    <tr>
-      <th>3997</th>
-      <td>0.267901</td>
-      <td>0.238164</td>
-      <td>0.249795</td>
-      <td>0.310199</td>
-      <td>0.215283</td>
-      <td>0.217200</td>
-      <td>0.236712</td>
-      <td>0.250475</td>
-      <td>0.254011</td>
-      <td>0.232966</td>
-      <td>...</td>
-      <td>0.191824</td>
-      <td>0.224332</td>
-      <td>0.247546</td>
-      <td>0.258202</td>
-      <td>0.232979</td>
-      <td>0.249462</td>
-      <td>0.212318</td>
-      <td>0.231168</td>
-      <td>0.230317</td>
-      <td>0.194971</td>
-    </tr>
-    <tr>
-      <th>3998</th>
-      <td>0.264819</td>
-      <td>0.259637</td>
-      <td>0.249645</td>
-      <td>0.295401</td>
-      <td>0.214651</td>
-      <td>0.228113</td>
-      <td>0.240940</td>
-      <td>0.259314</td>
-      <td>0.223928</td>
-      <td>0.220803</td>
-      <td>...</td>
-      <td>0.211240</td>
-      <td>0.202161</td>
-      <td>0.255878</td>
-      <td>0.257834</td>
-      <td>0.223692</td>
-      <td>0.248534</td>
-      <td>0.232569</td>
-      <td>0.208684</td>
-      <td>0.225532</td>
-      <td>0.208274</td>
-    </tr>
-    <tr>
-      <th>3999</th>
-      <td>0.255834</td>
-      <td>0.272207</td>
-      <td>0.247352</td>
-      <td>0.298092</td>
-      <td>0.216819</td>
-      <td>0.218597</td>
-      <td>0.266582</td>
-      <td>0.230202</td>
-      <td>0.252146</td>
-      <td>0.245384</td>
-      <td>...</td>
-      <td>0.217986</td>
-      <td>0.197049</td>
-      <td>0.245754</td>
-      <td>0.261453</td>
-      <td>0.218645</td>
-      <td>0.276013</td>
-      <td>0.235816</td>
-      <td>0.201815</td>
-      <td>0.198125</td>
-      <td>0.217942</td>
     </tr>
   </tbody>
 </table>
@@ -893,9 +568,9 @@ battingf
       <td>563</td>
       <td>138</td>
       <td>0.245115</td>
-      <td>0.244787</td>
-      <td>0.218377</td>
-      <td>0.272459</td>
+      <td>0.244644</td>
+      <td>0.217479</td>
+      <td>0.271896</td>
     </tr>
     <tr>
       <th>1</th>
@@ -903,9 +578,9 @@ battingf
       <td>540</td>
       <td>128</td>
       <td>0.237037</td>
-      <td>0.240307</td>
-      <td>0.214045</td>
-      <td>0.267754</td>
+      <td>0.240080</td>
+      <td>0.212640</td>
+      <td>0.266951</td>
     </tr>
     <tr>
       <th>2</th>
@@ -913,9 +588,9 @@ battingf
       <td>76</td>
       <td>24</td>
       <td>0.315789</td>
-      <td>0.255204</td>
-      <td>0.218271</td>
-      <td>0.293940</td>
+      <td>0.254437</td>
+      <td>0.215732</td>
+      <td>0.295471</td>
     </tr>
     <tr>
       <th>3</th>
@@ -923,9 +598,9 @@ battingf
       <td>643</td>
       <td>217</td>
       <td>0.337481</td>
-      <td>0.300469</td>
-      <td>0.272502</td>
-      <td>0.329750</td>
+      <td>0.300198</td>
+      <td>0.271661</td>
+      <td>0.330569</td>
     </tr>
     <tr>
       <th>4</th>
@@ -933,9 +608,9 @@ battingf
       <td>553</td>
       <td>120</td>
       <td>0.216998</td>
-      <td>0.228697</td>
-      <td>0.203143</td>
-      <td>0.254521</td>
+      <td>0.228769</td>
+      <td>0.202451</td>
+      <td>0.256487</td>
     </tr>
     <tr>
       <th>...</th>
@@ -953,9 +628,9 @@ battingf
       <td>537</td>
       <td>155</td>
       <td>0.288641</td>
-      <td>0.268994</td>
-      <td>0.240938</td>
-      <td>0.297001</td>
+      <td>0.268467</td>
+      <td>0.240529</td>
+      <td>0.297654</td>
     </tr>
     <tr>
       <th>652</th>
@@ -963,9 +638,9 @@ battingf
       <td>43</td>
       <td>8</td>
       <td>0.186047</td>
-      <td>0.238679</td>
-      <td>0.203513</td>
-      <td>0.276385</td>
+      <td>0.238932</td>
+      <td>0.201439</td>
+      <td>0.278378</td>
     </tr>
     <tr>
       <th>653</th>
@@ -973,9 +648,9 @@ battingf
       <td>107</td>
       <td>27</td>
       <td>0.252336</td>
-      <td>0.245811</td>
-      <td>0.209549</td>
-      <td>0.284095</td>
+      <td>0.245744</td>
+      <td>0.209507</td>
+      <td>0.283893</td>
     </tr>
     <tr>
       <th>654</th>
@@ -983,9 +658,9 @@ battingf
       <td>175</td>
       <td>30</td>
       <td>0.171429</td>
-      <td>0.222789</td>
-      <td>0.190221</td>
-      <td>0.256177</td>
+      <td>0.223203</td>
+      <td>0.190155</td>
+      <td>0.258194</td>
     </tr>
     <tr>
       <th>655</th>
@@ -993,27 +668,18 @@ battingf
       <td>124</td>
       <td>22</td>
       <td>0.177419</td>
-      <td>0.229074</td>
-      <td>0.194073</td>
-      <td>0.264210</td>
+      <td>0.229210</td>
+      <td>0.194561</td>
+      <td>0.265152</td>
     </tr>
   </tbody>
 </table>
 <p>656 rows × 7 columns</p>
 </div>
 
-
+### The Top 10 Batters, According to Stan
 
 Here is the roster of top 10 batters, according to the Stan point estimates. Notice that all the players in this roster have been at bat hundreds of times, so we can consider this top 10 to be more trustworthy. 
-
-
-```python
-stan_top10 = battingf.nlargest(10, 'gamma')
-stan_top10.loc[:, ['playerID', 'atbat', 'hits', 'batting_avg', 'gamma', 'g_min', 'g_max']]
-```
-
-
-
 
 <div>
 <style scoped>
@@ -1049,9 +715,9 @@ stan_top10.loc[:, ['playerID', 'atbat', 'hits', 'batting_avg', 'gamma', 'g_min',
       <td>574</td>
       <td>203</td>
       <td>0.353659</td>
-      <td>0.306983</td>
-      <td>0.278533</td>
-      <td>0.335950</td>
+      <td>0.306837</td>
+      <td>0.278873</td>
+      <td>0.336221</td>
     </tr>
     <tr>
       <th>3</th>
@@ -1059,9 +725,9 @@ stan_top10.loc[:, ['playerID', 'atbat', 'hits', 'batting_avg', 'gamma', 'g_min',
       <td>643</td>
       <td>217</td>
       <td>0.337481</td>
-      <td>0.300469</td>
-      <td>0.272502</td>
-      <td>0.329750</td>
+      <td>0.300198</td>
+      <td>0.271661</td>
+      <td>0.330569</td>
     </tr>
     <tr>
       <th>200</th>
@@ -1069,9 +735,9 @@ stan_top10.loc[:, ['playerID', 'atbat', 'hits', 'batting_avg', 'gamma', 'g_min',
       <td>637</td>
       <td>211</td>
       <td>0.331240</td>
-      <td>0.296616</td>
-      <td>0.268939</td>
-      <td>0.325132</td>
+      <td>0.296087</td>
+      <td>0.268344</td>
+      <td>0.324402</td>
     </tr>
     <tr>
       <th>158</th>
@@ -1079,9 +745,9 @@ stan_top10.loc[:, ['playerID', 'atbat', 'hits', 'batting_avg', 'gamma', 'g_min',
       <td>525</td>
       <td>173</td>
       <td>0.329524</td>
-      <td>0.291387</td>
-      <td>0.262630</td>
-      <td>0.320276</td>
+      <td>0.291116</td>
+      <td>0.262371</td>
+      <td>0.321038</td>
     </tr>
     <tr>
       <th>520</th>
@@ -1089,9 +755,9 @@ stan_top10.loc[:, ['playerID', 'atbat', 'hits', 'batting_avg', 'gamma', 'g_min',
       <td>477</td>
       <td>156</td>
       <td>0.327044</td>
-      <td>0.288108</td>
-      <td>0.257878</td>
-      <td>0.319570</td>
+      <td>0.287488</td>
+      <td>0.258570</td>
+      <td>0.318180</td>
     </tr>
     <tr>
       <th>61</th>
@@ -1099,9 +765,9 @@ stan_top10.loc[:, ['playerID', 'atbat', 'hits', 'batting_avg', 'gamma', 'g_min',
       <td>584</td>
       <td>179</td>
       <td>0.306507</td>
-      <td>0.280058</td>
-      <td>0.252020</td>
-      <td>0.308918</td>
+      <td>0.280108</td>
+      <td>0.253704</td>
+      <td>0.307470</td>
     </tr>
     <tr>
       <th>62</th>
@@ -1109,9 +775,9 @@ stan_top10.loc[:, ['playerID', 'atbat', 'hits', 'batting_avg', 'gamma', 'g_min',
       <td>571</td>
       <td>175</td>
       <td>0.306480</td>
-      <td>0.280045</td>
-      <td>0.252649</td>
-      <td>0.308639</td>
+      <td>0.279565</td>
+      <td>0.252326</td>
+      <td>0.307508</td>
     </tr>
     <tr>
       <th>53</th>
@@ -1119,9 +785,9 @@ stan_top10.loc[:, ['playerID', 'atbat', 'hits', 'batting_avg', 'gamma', 'g_min',
       <td>499</td>
       <td>153</td>
       <td>0.306613</td>
-      <td>0.278081</td>
-      <td>0.248118</td>
-      <td>0.308982</td>
+      <td>0.277572</td>
+      <td>0.249387</td>
+      <td>0.306813</td>
     </tr>
     <tr>
       <th>469</th>
@@ -1129,9 +795,9 @@ stan_top10.loc[:, ['playerID', 'atbat', 'hits', 'batting_avg', 'gamma', 'g_min',
       <td>400</td>
       <td>125</td>
       <td>0.312500</td>
-      <td>0.277054</td>
-      <td>0.247250</td>
-      <td>0.309745</td>
+      <td>0.277267</td>
+      <td>0.247371</td>
+      <td>0.310371</td>
     </tr>
     <tr>
       <th>410</th>
@@ -1139,54 +805,27 @@ stan_top10.loc[:, ['playerID', 'atbat', 'hits', 'batting_avg', 'gamma', 'g_min',
       <td>452</td>
       <td>139</td>
       <td>0.307522</td>
-      <td>0.276984</td>
-      <td>0.247191</td>
-      <td>0.307539</td>
+      <td>0.276918</td>
+      <td>0.247745</td>
+      <td>0.308113</td>
     </tr>
   </tbody>
 </table>
 </div>
+<p class="caption">The top 10 batters, as given by the Stan point estimates of batter ability</p>
 
 
-
-Let's plot the top 10 players' gammas, along with their observed batting average and the estimated global mean batting ability.
-
-
-
-```python
-global_ba = abframe['global_ba'].mean()
-
-(
-    ggplot(stan_top10, aes(x = "reorder(playerID, -gamma)")) + 
-    geom_errorbar(aes(ymin="g_min", ymax="g_max"),color="#1b9e77" ) +
-    geom_point(aes(y = "gamma"), color="#1b9e77") + 
-    geom_point(aes(y = "batting_avg"), color="#7570b3") + 
-    geom_hline(yintercept = global_ba, linetype="dashed") + 
-    theme(axis_text_x=element_text(angle=90, hjust=1)) + 
-    labs(x="Player ID in Stan-ranked order") + 
-    ggtitle(f"Estimated gamma and 95% uncertainty intervals for top 10 players.\nObserved batting average in purple")
-)
-```
-
-
+Let's plot the top 10 players' `gamma`s, along with their observed batting average and the estimated global mean batting ability.
     
-![png](baseball_stats_files/baseball_stats_28_0.png)
-    
+![Estimated gammas, with 95% uncertainty intervals, for top 10 players](baseball_stats_29_0.png)
+<p class="caption">Gamma estimates for the top 10 batters. Gamma and 95% uncertainty intervals in green; observed batting averages in purple. The horizontal dashed line is the estimated mean player batting ability.</p>    
 
 
 You might wonder why the observed batting averages are consistently so much higher than the estimated batting abilities. This is because the model is smoothing all the estimates towards the priors. Hence, performance estimates for high performing batters will be biased down, and performance estimates for low performing batters will be biased up. This is not a property unique to Stan; it is a property of the smoothing process.
 
-It is also worth pointing out, however, that the uncertainty intervals are away from the estimated global mean (horizontal dashed line), indicating that the model identifies these players as having above average batting ability. Furthermore, the ranking order of the players according to their gamma estimates is generally consistent with the ranking of their empirical batting averages.
+It is also worth pointing out, however, that the uncertainty intervals are away from the estimated global mean (horizontal dashed line), indicating that the model identifies these players as having above average batting ability. Furthermore, the ranking order of the players according to their `gamma` estimates is generally consistent with the ranking of their empirical batting averages.
 
-What about the players with very few at-bats? As desired, their gammas are near the estimated global mean of 0.24.
-
-
-```python
-battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 'gamma', 'g_min', 'g_max']]
-```
-
-
-
+What about the players with very few at-bats? As desired, their `gamma`s are near the estimated global mean of 0.24.
 
 <div>
 <style scoped>
@@ -1222,9 +861,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>2</td>
       <td>0</td>
       <td>0.0</td>
-      <td>0.243137</td>
-      <td>0.201593</td>
-      <td>0.286412</td>
+      <td>0.243261</td>
+      <td>0.204423</td>
+      <td>0.284172</td>
     </tr>
     <tr>
       <th>111</th>
@@ -1232,9 +871,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>1</td>
       <td>0</td>
       <td>0.0</td>
-      <td>0.243584</td>
-      <td>0.203323</td>
-      <td>0.285488</td>
+      <td>0.243484</td>
+      <td>0.202068</td>
+      <td>0.287601</td>
     </tr>
     <tr>
       <th>124</th>
@@ -1242,9 +881,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>4</td>
       <td>2</td>
       <td>0.5</td>
-      <td>0.246694</td>
-      <td>0.205704</td>
-      <td>0.290228</td>
+      <td>0.246683</td>
+      <td>0.206278</td>
+      <td>0.288201</td>
     </tr>
     <tr>
       <th>140</th>
@@ -1252,9 +891,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>1</td>
       <td>1</td>
       <td>1.0</td>
-      <td>0.246049</td>
-      <td>0.206210</td>
-      <td>0.288343</td>
+      <td>0.245780</td>
+      <td>0.207254</td>
+      <td>0.286393</td>
     </tr>
     <tr>
       <th>165</th>
@@ -1262,9 +901,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>5</td>
       <td>2</td>
       <td>0.4</td>
-      <td>0.246178</td>
-      <td>0.204776</td>
-      <td>0.290680</td>
+      <td>0.246108</td>
+      <td>0.206405</td>
+      <td>0.287695</td>
     </tr>
     <tr>
       <th>205</th>
@@ -1272,9 +911,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>1</td>
       <td>0</td>
       <td>0.0</td>
-      <td>0.243544</td>
-      <td>0.203917</td>
-      <td>0.285525</td>
+      <td>0.243642</td>
+      <td>0.205138</td>
+      <td>0.284218</td>
     </tr>
     <tr>
       <th>229</th>
@@ -1282,9 +921,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>5</td>
       <td>2</td>
       <td>0.4</td>
-      <td>0.246226</td>
-      <td>0.206139</td>
-      <td>0.287573</td>
+      <td>0.245800</td>
+      <td>0.205371</td>
+      <td>0.288453</td>
     </tr>
     <tr>
       <th>242</th>
@@ -1292,9 +931,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>2</td>
       <td>0</td>
       <td>0.0</td>
-      <td>0.243047</td>
-      <td>0.204422</td>
-      <td>0.283931</td>
+      <td>0.243317</td>
+      <td>0.205493</td>
+      <td>0.283204</td>
     </tr>
     <tr>
       <th>243</th>
@@ -1302,9 +941,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>5</td>
       <td>0</td>
       <td>0.0</td>
-      <td>0.241305</td>
-      <td>0.201175</td>
-      <td>0.284631</td>
+      <td>0.241302</td>
+      <td>0.203104</td>
+      <td>0.282519</td>
     </tr>
     <tr>
       <th>290</th>
@@ -1312,9 +951,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>4</td>
       <td>0</td>
       <td>0.0</td>
-      <td>0.241411</td>
-      <td>0.202833</td>
-      <td>0.283075</td>
+      <td>0.241975</td>
+      <td>0.202445</td>
+      <td>0.282454</td>
     </tr>
     <tr>
       <th>325</th>
@@ -1322,9 +961,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>2</td>
       <td>1</td>
       <td>0.5</td>
-      <td>0.245342</td>
-      <td>0.205990</td>
-      <td>0.285929</td>
+      <td>0.245427</td>
+      <td>0.205673</td>
+      <td>0.287053</td>
     </tr>
     <tr>
       <th>362</th>
@@ -1332,9 +971,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>1</td>
       <td>0</td>
       <td>0.0</td>
-      <td>0.243426</td>
-      <td>0.201870</td>
-      <td>0.286100</td>
+      <td>0.243813</td>
+      <td>0.205295</td>
+      <td>0.285935</td>
     </tr>
     <tr>
       <th>386</th>
@@ -1342,9 +981,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>1</td>
       <td>0</td>
       <td>0.0</td>
-      <td>0.243544</td>
-      <td>0.203130</td>
-      <td>0.286071</td>
+      <td>0.243820</td>
+      <td>0.204505</td>
+      <td>0.284791</td>
     </tr>
     <tr>
       <th>388</th>
@@ -1352,9 +991,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>4</td>
       <td>0</td>
       <td>0.0</td>
-      <td>0.242039</td>
-      <td>0.201150</td>
-      <td>0.283373</td>
+      <td>0.241544</td>
+      <td>0.201192</td>
+      <td>0.284165</td>
     </tr>
     <tr>
       <th>424</th>
@@ -1362,9 +1001,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>2</td>
       <td>0</td>
       <td>0.0</td>
-      <td>0.242842</td>
-      <td>0.203207</td>
-      <td>0.285058</td>
+      <td>0.242944</td>
+      <td>0.202513</td>
+      <td>0.285449</td>
     </tr>
     <tr>
       <th>482</th>
@@ -1372,9 +1011,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>5</td>
       <td>1</td>
       <td>0.2</td>
-      <td>0.243695</td>
-      <td>0.201459</td>
-      <td>0.286321</td>
+      <td>0.243430</td>
+      <td>0.204012</td>
+      <td>0.285005</td>
     </tr>
     <tr>
       <th>514</th>
@@ -1382,9 +1021,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>1</td>
       <td>0</td>
       <td>0.0</td>
-      <td>0.243841</td>
-      <td>0.204074</td>
-      <td>0.286690</td>
+      <td>0.243737</td>
+      <td>0.203860</td>
+      <td>0.285506</td>
     </tr>
     <tr>
       <th>521</th>
@@ -1392,9 +1031,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>1</td>
       <td>0</td>
       <td>0.0</td>
-      <td>0.243625</td>
-      <td>0.204336</td>
-      <td>0.284714</td>
+      <td>0.243371</td>
+      <td>0.203613</td>
+      <td>0.285376</td>
     </tr>
     <tr>
       <th>527</th>
@@ -1402,9 +1041,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>4</td>
       <td>0</td>
       <td>0.0</td>
-      <td>0.241831</td>
-      <td>0.201425</td>
-      <td>0.284156</td>
+      <td>0.241642</td>
+      <td>0.200795</td>
+      <td>0.284840</td>
     </tr>
     <tr>
       <th>529</th>
@@ -1412,9 +1051,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>5</td>
       <td>0</td>
       <td>0.0</td>
-      <td>0.241543</td>
-      <td>0.199343</td>
-      <td>0.284477</td>
+      <td>0.241498</td>
+      <td>0.201679</td>
+      <td>0.283838</td>
     </tr>
     <tr>
       <th>614</th>
@@ -1422,9 +1061,9 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>3</td>
       <td>0</td>
       <td>0.0</td>
-      <td>0.242775</td>
-      <td>0.202628</td>
-      <td>0.284301</td>
+      <td>0.242547</td>
+      <td>0.202917</td>
+      <td>0.283509</td>
     </tr>
     <tr>
       <th>622</th>
@@ -1432,210 +1071,41 @@ battingf.loc[battingf['atbat']<=5, ['playerID', 'atbat', 'hits', 'batting_avg', 
       <td>2</td>
       <td>0</td>
       <td>0.0</td>
-      <td>0.242915</td>
-      <td>0.201881</td>
-      <td>0.286345</td>
+      <td>0.242655</td>
+      <td>0.203335</td>
+      <td>0.284259</td>
     </tr>
   </tbody>
 </table>
 </div>
-
+<p class="caption">Observed batting averages and estimated batting ability for players with five or fewer at-bats.</p>
 
 
 ## Who's the best player? Another way to choose
 
-If our goal is in fact to choose the player(s) with the highest batting ability, there is another way to do it, using the "possible worlds" sampled by Stan. For each one of the 4000 possible worlds, we identify the best performing player. The "true" best player is most likely the one who is best in the most possible worlds.
+If our goal is in fact to choose the player(s) with the highest batting ability, there is another way to do it, using the "possible worlds" sampled by Stan. For each one of the 4000 possible worlds, we identify the highest ability player. The "true" best player is most likely the one who is best in the most possible worlds.
 
 Below, we find the best player in every Stan sample, and pick our top 10 accordingly. We could of course pick the top 10 in each possible world, and draw our "most likely top 10" from the resulting sets, but picking the single best is easier to code, and gets the point across.
 
 
 ```python
-players = batting_estimates.columns
-
 # get the best performance in each sample world
 best_perf = batting_estimates.max(axis=1)
 
 # mark which player was the best in each world. ties ok
 is_best = batting_estimates.eq(best_perf, axis=0).astype(int) 
 
-mean_best = is_best.mean().reset_index() # compute the series and convert it to a data frame
+# compute the series and convert it to a data frame
+mean_best = is_best.mean().reset_index() 
 mean_best.columns = ['playerID', 'frac_as_best']
 
 # join it into battingf
 battingf = battingf.merge(mean_best, on='playerID')
-battingf
 
-```
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>playerID</th>
-      <th>atbat</th>
-      <th>hits</th>
-      <th>batting_avg</th>
-      <th>gamma</th>
-      <th>g_min</th>
-      <th>g_max</th>
-      <th>frac_as_best</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>abramcj01</td>
-      <td>563</td>
-      <td>138</td>
-      <td>0.245115</td>
-      <td>0.244787</td>
-      <td>0.218377</td>
-      <td>0.272459</td>
-      <td>0.00000</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>abreujo02</td>
-      <td>540</td>
-      <td>128</td>
-      <td>0.237037</td>
-      <td>0.240307</td>
-      <td>0.214045</td>
-      <td>0.267754</td>
-      <td>0.00000</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>abreuwi02</td>
-      <td>76</td>
-      <td>24</td>
-      <td>0.315789</td>
-      <td>0.255204</td>
-      <td>0.218271</td>
-      <td>0.293940</td>
-      <td>0.00125</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>acunaro01</td>
-      <td>643</td>
-      <td>217</td>
-      <td>0.337481</td>
-      <td>0.300469</td>
-      <td>0.272502</td>
-      <td>0.329750</td>
-      <td>0.17325</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>adamewi01</td>
-      <td>553</td>
-      <td>120</td>
-      <td>0.216998</td>
-      <td>0.228697</td>
-      <td>0.203143</td>
-      <td>0.254521</td>
-      <td>0.00000</td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-    </tr>
-    <tr>
-      <th>651</th>
-      <td>yoshima02</td>
-      <td>537</td>
-      <td>155</td>
-      <td>0.288641</td>
-      <td>0.268994</td>
-      <td>0.240938</td>
-      <td>0.297001</td>
-      <td>0.00200</td>
-    </tr>
-    <tr>
-      <th>652</th>
-      <td>youngja02</td>
-      <td>43</td>
-      <td>8</td>
-      <td>0.186047</td>
-      <td>0.238679</td>
-      <td>0.203513</td>
-      <td>0.276385</td>
-      <td>0.00000</td>
-    </tr>
-    <tr>
-      <th>653</th>
-      <td>youngja03</td>
-      <td>107</td>
-      <td>27</td>
-      <td>0.252336</td>
-      <td>0.245811</td>
-      <td>0.209549</td>
-      <td>0.284095</td>
-      <td>0.00025</td>
-    </tr>
-    <tr>
-      <th>654</th>
-      <td>zavalse01</td>
-      <td>175</td>
-      <td>30</td>
-      <td>0.171429</td>
-      <td>0.222789</td>
-      <td>0.190221</td>
-      <td>0.256177</td>
-      <td>0.00000</td>
-    </tr>
-    <tr>
-      <th>655</th>
-      <td>zuninmi01</td>
-      <td>124</td>
-      <td>22</td>
-      <td>0.177419</td>
-      <td>0.229074</td>
-      <td>0.194073</td>
-      <td>0.264210</td>
-      <td>0.00000</td>
-    </tr>
-  </tbody>
-</table>
-<p>656 rows × 8 columns</p>
-</div>
-
-
-
-
-```python
 # top 10 by fraction best
 top10_by_frac = battingf.nlargest(10, 'frac_as_best')
 top10_by_frac[['playerID', 'frac_as_best', 'batting_avg', 'gamma']]
 ```
-
-
-
 
 <div>
 <style scoped>
@@ -1665,77 +1135,77 @@ top10_by_frac[['playerID', 'frac_as_best', 'batting_avg', 'gamma']]
     <tr>
       <th>34</th>
       <td>arraelu01</td>
-      <td>0.33725</td>
+      <td>0.33250</td>
       <td>0.353659</td>
-      <td>0.306983</td>
+      <td>0.306837</td>
     </tr>
     <tr>
       <th>3</th>
       <td>acunaro01</td>
-      <td>0.17325</td>
+      <td>0.18100</td>
       <td>0.337481</td>
-      <td>0.300469</td>
+      <td>0.300198</td>
     </tr>
     <tr>
       <th>200</th>
       <td>freemfr01</td>
-      <td>0.11475</td>
+      <td>0.11000</td>
       <td>0.331240</td>
-      <td>0.296616</td>
+      <td>0.296087</td>
     </tr>
     <tr>
       <th>158</th>
       <td>diazya01</td>
-      <td>0.05650</td>
+      <td>0.06425</td>
       <td>0.329524</td>
-      <td>0.291387</td>
+      <td>0.291116</td>
     </tr>
     <tr>
       <th>520</th>
       <td>seageco01</td>
-      <td>0.04650</td>
+      <td>0.04150</td>
       <td>0.327044</td>
-      <td>0.288108</td>
-    </tr>
-    <tr>
-      <th>53</th>
-      <td>bellico01</td>
-      <td>0.01350</td>
-      <td>0.306613</td>
-      <td>0.278081</td>
+      <td>0.287488</td>
     </tr>
     <tr>
       <th>469</th>
       <td>ramirha02</td>
-      <td>0.01275</td>
+      <td>0.01650</td>
       <td>0.312500</td>
-      <td>0.277054</td>
+      <td>0.277267</td>
     </tr>
     <tr>
       <th>62</th>
       <td>bichebo01</td>
-      <td>0.01125</td>
+      <td>0.01250</td>
       <td>0.306480</td>
-      <td>0.280045</td>
+      <td>0.279565</td>
+    </tr>
+    <tr>
+      <th>410</th>
+      <td>naylojo01</td>
+      <td>0.01075</td>
+      <td>0.307522</td>
+      <td>0.276918</td>
     </tr>
     <tr>
       <th>61</th>
       <td>bettsmo01</td>
-      <td>0.01100</td>
+      <td>0.01050</td>
       <td>0.306507</td>
-      <td>0.280058</td>
+      <td>0.280108</td>
     </tr>
     <tr>
-      <th>18</th>
-      <td>altuvjo01</td>
-      <td>0.00850</td>
-      <td>0.311111</td>
-      <td>0.274941</td>
+      <th>53</th>
+      <td>bellico01</td>
+      <td>0.00975</td>
+      <td>0.306613</td>
+      <td>0.277572</td>
     </tr>
   </tbody>
 </table>
 </div>
-
+<p class="caption">Too 10 batters, calculated by how often each player ranked best in a Stan sample.</p>
 
 
 This is substantially the same set of players as were selected by looking just at the point estimates. That's good! It gives us confidence that these are indeed the players with the highest batting ability.
@@ -1744,8 +1214,6 @@ Let's mark the players who show up in the top 10, by either criterion.
 
 
 ```python
-# top 10 by point estimate of performance -- the columns are ordered differently
-
 top10_by_frac = set(battingf.nlargest(10, 'frac_as_best')['playerID'])
 top10_by_gamma = set(battingf.nlargest(10, 'gamma')['playerID'])
 
@@ -1759,13 +1227,10 @@ in_top10 = battingf['playerID'].isin(in_top10_set)
 battingf['in_top10'] = in_top10.astype(str)
 battingf.loc[battingf['in_top10']=='True', ['playerID', 'atbat', 'hits', 'batting_avg', 'gamma', 'frac_as_best']]
 ```
-
-    Picked by point estimate but not by fraction best: {'naylojo01'}
-    Picked by fraction best but not by point estimate: {'altuvjo01'}
-
-
-
-
+```
+    Picked by point estimate but not by fraction best: set()
+    Picked by fraction best but not by point estimate: set()
+```
 
 <div>
 <style scoped>
@@ -1800,17 +1265,8 @@ battingf.loc[battingf['in_top10']=='True', ['playerID', 'atbat', 'hits', 'battin
       <td>643</td>
       <td>217</td>
       <td>0.337481</td>
-      <td>0.300469</td>
-      <td>0.17325</td>
-    </tr>
-    <tr>
-      <th>18</th>
-      <td>altuvjo01</td>
-      <td>360</td>
-      <td>112</td>
-      <td>0.311111</td>
-      <td>0.274941</td>
-      <td>0.00850</td>
+      <td>0.300198</td>
+      <td>0.18100</td>
     </tr>
     <tr>
       <th>34</th>
@@ -1818,8 +1274,8 @@ battingf.loc[battingf['in_top10']=='True', ['playerID', 'atbat', 'hits', 'battin
       <td>574</td>
       <td>203</td>
       <td>0.353659</td>
-      <td>0.306983</td>
-      <td>0.33725</td>
+      <td>0.306837</td>
+      <td>0.33250</td>
     </tr>
     <tr>
       <th>53</th>
@@ -1827,8 +1283,8 @@ battingf.loc[battingf['in_top10']=='True', ['playerID', 'atbat', 'hits', 'battin
       <td>499</td>
       <td>153</td>
       <td>0.306613</td>
-      <td>0.278081</td>
-      <td>0.01350</td>
+      <td>0.277572</td>
+      <td>0.00975</td>
     </tr>
     <tr>
       <th>61</th>
@@ -1836,8 +1292,8 @@ battingf.loc[battingf['in_top10']=='True', ['playerID', 'atbat', 'hits', 'battin
       <td>584</td>
       <td>179</td>
       <td>0.306507</td>
-      <td>0.280058</td>
-      <td>0.01100</td>
+      <td>0.280108</td>
+      <td>0.01050</td>
     </tr>
     <tr>
       <th>62</th>
@@ -1845,8 +1301,8 @@ battingf.loc[battingf['in_top10']=='True', ['playerID', 'atbat', 'hits', 'battin
       <td>571</td>
       <td>175</td>
       <td>0.306480</td>
-      <td>0.280045</td>
-      <td>0.01125</td>
+      <td>0.279565</td>
+      <td>0.01250</td>
     </tr>
     <tr>
       <th>158</th>
@@ -1854,8 +1310,8 @@ battingf.loc[battingf['in_top10']=='True', ['playerID', 'atbat', 'hits', 'battin
       <td>525</td>
       <td>173</td>
       <td>0.329524</td>
-      <td>0.291387</td>
-      <td>0.05650</td>
+      <td>0.291116</td>
+      <td>0.06425</td>
     </tr>
     <tr>
       <th>200</th>
@@ -1863,8 +1319,8 @@ battingf.loc[battingf['in_top10']=='True', ['playerID', 'atbat', 'hits', 'battin
       <td>637</td>
       <td>211</td>
       <td>0.331240</td>
-      <td>0.296616</td>
-      <td>0.11475</td>
+      <td>0.296087</td>
+      <td>0.11000</td>
     </tr>
     <tr>
       <th>410</th>
@@ -1872,8 +1328,8 @@ battingf.loc[battingf['in_top10']=='True', ['playerID', 'atbat', 'hits', 'battin
       <td>452</td>
       <td>139</td>
       <td>0.307522</td>
-      <td>0.276984</td>
-      <td>0.00775</td>
+      <td>0.276918</td>
+      <td>0.01075</td>
     </tr>
     <tr>
       <th>469</th>
@@ -1881,8 +1337,8 @@ battingf.loc[battingf['in_top10']=='True', ['playerID', 'atbat', 'hits', 'battin
       <td>400</td>
       <td>125</td>
       <td>0.312500</td>
-      <td>0.277054</td>
-      <td>0.01275</td>
+      <td>0.277267</td>
+      <td>0.01650</td>
     </tr>
     <tr>
       <th>520</th>
@@ -1890,48 +1346,23 @@ battingf.loc[battingf['in_top10']=='True', ['playerID', 'atbat', 'hits', 'battin
       <td>477</td>
       <td>156</td>
       <td>0.327044</td>
-      <td>0.288108</td>
-      <td>0.04650</td>
+      <td>0.287488</td>
+      <td>0.04150</td>
     </tr>
   </tbody>
 </table>
 </div>
+<p class="caption">Players marked as belonging to top 10 by either ranking criterion.</p>
 
 
+### Comparing the Naive Ranking to Stan's Ranking
 
-Now let's plot all the players, sorted by observed batting average (lowest to highest). We'll plot the estimated player ability (`gamma`), along with the 95% uncertainty intervals around the estimates (in light gray).
-The points are also color coded by whether or not the player made at least one of the top 10 lists (in green) or not (in purple). The dashed line is the estimated mean player ability.
+Now let's plot all the players, sorted by observed batting average (lowest to highest). We'll plot the estimated player ability (`gamma`), along with the 95% uncertainty intervals around the estimates (in light gray). The points are also color coded by whether or not the player made at least one of the top 10 lists (in green) or not (in purple). The dashed line is the estimated mean player ability.
 
-
-```python
-
-palette = {
-    'False':'#7570b3',
-    'True': '#1b9e77'
-}
-
-labels = {
-    'False': 'Not in top 10',
-    'True': 'In top 10 by some criterion'
-}
-
-(
-    ggplot(battingf, aes(x = "reorder(playerID, batting_avg)")) + 
-    geom_errorbar(aes(ymin="g_min", ymax="g_max"), color='lightgray' ) +
-    geom_point(aes(y = "gamma", color='in_top10')) + 
-    geom_hline(yintercept = global_ba, linetype="dashed") + 
-    labs(x="Players ordered by observed batting average (lowest to highest)", y="player ability (baselined at estimated mean ability)") + 
-    ggtitle(f"Estimated player ability with 95% uncertainty interval, compared to observed performance") + 
-    scale_color_manual(values=palette, labels=labels) +
-    theme(figure_size = (12, 8), legend_position='bottom', axis_text_x=element_blank(), axis_ticks_x=element_blank())
-)
-
-
-```
 
 
     
-![png](baseball_stats_files/baseball_stats_38_0.png)
+![png](baseball_stats_39_0.png)
     
 
 
@@ -1977,23 +1408,23 @@ battingf.nlargest(3, 'frac_as_best')[['playerID', 'frac_as_best', 'batting_avg',
     <tr>
       <th>34</th>
       <td>arraelu01</td>
-      <td>0.33725</td>
+      <td>0.3325</td>
       <td>0.353659</td>
-      <td>0.306983</td>
+      <td>0.306837</td>
     </tr>
     <tr>
       <th>3</th>
       <td>acunaro01</td>
-      <td>0.17325</td>
+      <td>0.1810</td>
       <td>0.337481</td>
-      <td>0.300469</td>
+      <td>0.300198</td>
     </tr>
     <tr>
       <th>200</th>
       <td>freemfr01</td>
-      <td>0.11475</td>
+      <td>0.1100</td>
       <td>0.331240</td>
-      <td>0.296616</td>
+      <td>0.296087</td>
     </tr>
   </tbody>
 </table>
@@ -2005,12 +1436,401 @@ Stan's selected best-ranked player by both "probability of being best" and point
 
 > Known for his ability to put the ball in play and not striking out, Arráez is considered one of the best contact hitters of his generation. From 2022 to 2024, Arráez became the first player in MLB history to win three consecutive batting titles with three different teams.... He was also the second player in the modern era to win a batting title in each league and the first to do so in consecutive years. 
 
-Note that his career MLB batting average[^2] (calculated from 2019 through May 17, 2026) is 0.317. This is pretty close to our estimated `gamma` of 0.307; in fact, our estimate is a better prediction of Arráez's career performance (so far) than the simple observation of his 2023 season batting average is.
+Note that his career MLB batting average[^3] (calculated from 2019 through May 17, 2026) is 0.317. This is pretty close to our estimated `gamma` of 0.307. In fact, our estimate is a better prediction of Arráez's career performance (so far) than the simple observation of his 2023 season batting average is---even though we estimated his ability using only this single season!
 
-The next two players (as ranked by probability of being best) are Ronald Acuña, Jr. (career batting average so far = 0.288) and Freddie Freeman (career batting average so far = 0.299). Again, both Stan's estimates and career batting averages for all these players are below their observed 2023 season batting averages---showing that smoothing performance estimates to the population mean was a reasonable modeling choice. Note also that the career batting averages for these top three players also fell within the 95% uncertainty intervals estimated by Stan. 
+The next two players (as ranked by probability of being best) are Ronald Acuña, Jr. (career batting average so far = 0.288) and Freddie Freeman (career batting average so far = 0.299). Again, both Stan's estimates and career batting averages for all these players are below their observed 2023 season batting averages---showing that smoothing performance estimates to the population mean was a reasonable modeling choice. Note also that the career batting averages for these top three players also fell within the 95% uncertainty intervals of ability, as estimated by Stan. 
 
 
-[^2]: All career batting averages as given by Wikipedia on May 19, 2026.
+[^3]: All career batting averages as given by Wikipedia on May 19, 2026.
+
+## Matching Summaries
+
+Let's further compare Stan's batting ability estimates with observations from the data.
+
+
+```python
+mean_ability = battingf['gamma'].mean()
+std_ability = battingf['gamma'].std()
+
+print(f'Mean observed batting average: {mean_ba:.3f}, standard deviation {std_ba:.3f}.')
+print(f'Mean estimated batting ability: {mean_ability:.3f}, standard deviation {std_ability:.3f}.')
+```
+
+    Mean observed batting average: 0.227, standard deviation 0.075.
+    Mean estimated batting ability: 0.244, standard deviation 0.012.
+
+
+As we saw previously, Stan's estimated mean batter ability is close to what was observed in the data, but the standard deviation of the ability estimates is much lower! 
+This is not surprising: we also know that the number of player at-bats varied widely, and players with few at-bats will have observed batting averages that will tend to over- or under- estimate their actual abilities. This is why observed batting average standard deviation is so much higher than estimated batting ability standard deviation.
+
+In order to properly compare Stan's ability estimates to actual observations, we have to simulate the season in each Stan sample. That is, in each possible world, we give each player the same number of at-bats as they had in 2023, and generate a plausible observed batting average, given that number of at-bats. This is shown below.
+
+
+```python
+def draw_synthetic_hitrate (atbat, bavec):
+    return rng.binomial(atbat, bavec)/atbat
+
+synthetic_hitrate_frame = pd.DataFrame({
+    col: draw_synthetic_hitrate(battingf['atbat'][i], batting_estimates[col])
+    for i, col in enumerate(batting_estimates.columns)
+})
+
+synthetic_hitrate_frame
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>abramcj01</th>
+      <th>abreujo02</th>
+      <th>abreuwi02</th>
+      <th>acunaro01</th>
+      <th>adamewi01</th>
+      <th>adamsjo03</th>
+      <th>adamsri03</th>
+      <th>adelljo01</th>
+      <th>adriaeh01</th>
+      <th>aguilje01</th>
+      <th>...</th>
+      <th>wongko01</th>
+      <th>wynnsau01</th>
+      <th>yastrmi01</th>
+      <th>yelicch01</th>
+      <th>yepezju01</th>
+      <th>yoshima02</th>
+      <th>youngja02</th>
+      <th>youngja03</th>
+      <th>zavalse01</th>
+      <th>zuninmi01</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.243339</td>
+      <td>0.246296</td>
+      <td>0.381579</td>
+      <td>0.345257</td>
+      <td>0.235081</td>
+      <td>0.205128</td>
+      <td>0.286713</td>
+      <td>0.327586</td>
+      <td>0.1</td>
+      <td>0.288462</td>
+      <td>...</td>
+      <td>0.254464</td>
+      <td>0.276923</td>
+      <td>0.209091</td>
+      <td>0.256364</td>
+      <td>0.250000</td>
+      <td>0.216015</td>
+      <td>0.255814</td>
+      <td>0.177570</td>
+      <td>0.245714</td>
+      <td>0.250000</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.257549</td>
+      <td>0.209259</td>
+      <td>0.368421</td>
+      <td>0.317263</td>
+      <td>0.218807</td>
+      <td>0.333333</td>
+      <td>0.188811</td>
+      <td>0.224138</td>
+      <td>0.2</td>
+      <td>0.211538</td>
+      <td>...</td>
+      <td>0.223214</td>
+      <td>0.207692</td>
+      <td>0.221212</td>
+      <td>0.285455</td>
+      <td>0.216667</td>
+      <td>0.260708</td>
+      <td>0.232558</td>
+      <td>0.261682</td>
+      <td>0.228571</td>
+      <td>0.169355</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.238011</td>
+      <td>0.262963</td>
+      <td>0.210526</td>
+      <td>0.318818</td>
+      <td>0.209765</td>
+      <td>0.205128</td>
+      <td>0.328671</td>
+      <td>0.275862</td>
+      <td>0.4</td>
+      <td>0.240385</td>
+      <td>...</td>
+      <td>0.223214</td>
+      <td>0.307692</td>
+      <td>0.248485</td>
+      <td>0.260000</td>
+      <td>0.250000</td>
+      <td>0.275605</td>
+      <td>0.186047</td>
+      <td>0.224299</td>
+      <td>0.200000</td>
+      <td>0.266129</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.282416</td>
+      <td>0.253704</td>
+      <td>0.276316</td>
+      <td>0.284603</td>
+      <td>0.260398</td>
+      <td>0.256410</td>
+      <td>0.244755</td>
+      <td>0.241379</td>
+      <td>0.4</td>
+      <td>0.221154</td>
+      <td>...</td>
+      <td>0.245536</td>
+      <td>0.284615</td>
+      <td>0.193939</td>
+      <td>0.232727</td>
+      <td>0.300000</td>
+      <td>0.279330</td>
+      <td>0.279070</td>
+      <td>0.214953</td>
+      <td>0.291429</td>
+      <td>0.225806</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.218472</td>
+      <td>0.237037</td>
+      <td>0.236842</td>
+      <td>0.272162</td>
+      <td>0.231465</td>
+      <td>0.205128</td>
+      <td>0.223776</td>
+      <td>0.293103</td>
+      <td>0.8</td>
+      <td>0.163462</td>
+      <td>...</td>
+      <td>0.200893</td>
+      <td>0.184615</td>
+      <td>0.248485</td>
+      <td>0.270909</td>
+      <td>0.216667</td>
+      <td>0.240223</td>
+      <td>0.232558</td>
+      <td>0.214953</td>
+      <td>0.211429</td>
+      <td>0.209677</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>3995</th>
+      <td>0.289520</td>
+      <td>0.227778</td>
+      <td>0.421053</td>
+      <td>0.284603</td>
+      <td>0.215190</td>
+      <td>0.205128</td>
+      <td>0.279720</td>
+      <td>0.172414</td>
+      <td>0.0</td>
+      <td>0.211538</td>
+      <td>...</td>
+      <td>0.214286</td>
+      <td>0.238462</td>
+      <td>0.203030</td>
+      <td>0.270909</td>
+      <td>0.316667</td>
+      <td>0.277467</td>
+      <td>0.209302</td>
+      <td>0.224299</td>
+      <td>0.234286</td>
+      <td>0.241935</td>
+    </tr>
+    <tr>
+      <th>3996</th>
+      <td>0.253996</td>
+      <td>0.229630</td>
+      <td>0.381579</td>
+      <td>0.293935</td>
+      <td>0.222423</td>
+      <td>0.307692</td>
+      <td>0.209790</td>
+      <td>0.172414</td>
+      <td>0.2</td>
+      <td>0.307692</td>
+      <td>...</td>
+      <td>0.156250</td>
+      <td>0.223077</td>
+      <td>0.203030</td>
+      <td>0.281818</td>
+      <td>0.166667</td>
+      <td>0.305400</td>
+      <td>0.209302</td>
+      <td>0.233645</td>
+      <td>0.217143</td>
+      <td>0.225806</td>
+    </tr>
+    <tr>
+      <th>3997</th>
+      <td>0.236234</td>
+      <td>0.216667</td>
+      <td>0.250000</td>
+      <td>0.306376</td>
+      <td>0.227848</td>
+      <td>0.307692</td>
+      <td>0.181818</td>
+      <td>0.224138</td>
+      <td>0.5</td>
+      <td>0.192308</td>
+      <td>...</td>
+      <td>0.218750</td>
+      <td>0.253846</td>
+      <td>0.242424</td>
+      <td>0.270909</td>
+      <td>0.266667</td>
+      <td>0.249534</td>
+      <td>0.209302</td>
+      <td>0.252336</td>
+      <td>0.188571</td>
+      <td>0.241935</td>
+    </tr>
+    <tr>
+      <th>3998</th>
+      <td>0.275311</td>
+      <td>0.251852</td>
+      <td>0.236842</td>
+      <td>0.295490</td>
+      <td>0.216998</td>
+      <td>0.256410</td>
+      <td>0.195804</td>
+      <td>0.206897</td>
+      <td>0.0</td>
+      <td>0.173077</td>
+      <td>...</td>
+      <td>0.245536</td>
+      <td>0.230769</td>
+      <td>0.248485</td>
+      <td>0.252727</td>
+      <td>0.200000</td>
+      <td>0.324022</td>
+      <td>0.186047</td>
+      <td>0.196262</td>
+      <td>0.360000</td>
+      <td>0.266129</td>
+    </tr>
+    <tr>
+      <th>3999</th>
+      <td>0.291297</td>
+      <td>0.244444</td>
+      <td>0.263158</td>
+      <td>0.259720</td>
+      <td>0.278481</td>
+      <td>0.282051</td>
+      <td>0.286713</td>
+      <td>0.189655</td>
+      <td>0.3</td>
+      <td>0.240385</td>
+      <td>...</td>
+      <td>0.223214</td>
+      <td>0.276923</td>
+      <td>0.263636</td>
+      <td>0.254545</td>
+      <td>0.200000</td>
+      <td>0.240223</td>
+      <td>0.186047</td>
+      <td>0.271028</td>
+      <td>0.165714</td>
+      <td>0.250000</td>
+    </tr>
+  </tbody>
+</table>
+<p>4000 rows × 656 columns</p>
+</div>
+
+
+
+
+```python
+# get the mean and standard devation on ability for each sample world
+mean_synth_vec = synthetic_hitrate_frame.mean(axis=1)
+std_synth_vec = synthetic_hitrate_frame.std(axis=1)
+
+# get the average mean and standard deviation over all sample worlds.
+mean_synth = mean_synth_vec.mean()
+std_synth = std_synth_vec.mean()
+
+print(f'Mean observed batting average: {mean_ba:.3f}, standard deviation {std_ba:.3f}.')
+print(f'Mean synthetic batting average observations: {mean_synth:.3f}, standard deviation {std_synth:.3f}.')
+
+```
+
+    Mean observed batting average: 0.227, standard deviation 0.075.
+    Mean synthetic batting average observations: 0.244, standard deviation 0.078.
+
+
+
+```python
+(
+    ggplot(std_synth_vec.to_frame(name="standard deviation"), aes(x="standard deviation")) + 
+    geom_density(color="darkblue") + 
+    geom_vline(xintercept = std_synth, color="darkblue") + 
+    geom_vline(xintercept=std_ba, color="darkgray", linetype="dashed") + 
+    ggtitle("Batting average standard deviation, synthetic scenarios\nObserved standard deviation as dashed line")
+)
+```
+
+
+    
+![png](baseball_stats_48_0.png)
+    
+
+
+Once we simulate the at-bats, the behaviors in the synthetic worlds are consistent with what was observed in the actual data. This also gives us confidence that our model is a reasonable approximation of the real world baseball hit generation process. Specifically, it's an approximation we can use to answer the questions we want to ask, like "who are the best batters?".
 
 ## Estimate what you want to know, not just what you can observe
 
@@ -2018,4 +1838,4 @@ As we've seen in the above example, an advantage of probabilistic modeling is th
 
 In addition, probabilistic modeling systems that are based on Monte Carlo sampling (like Stan) provide samples of "possible worlds" that are consistent with the training data. You can use these samples not only to calculate point estimates of quantities of interest, but also uncertainty intervals around those estimates. You can also use the possible worlds to run simulations and scenarios (like, "who are the top 10 players in each possible world?") to further help you in decision-making. 
 
-Of course, the estimates can only be as good as the process that you describe. But as your understanding of and intuitions about these processes improve, then so, too,  can your model. 
+Of course, the estimates can only be as good as the process that you describe. But as your understanding of and intuitions about these processes improve, then so, too, can your model. 

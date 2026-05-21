@@ -1359,11 +1359,9 @@ battingf.loc[battingf['in_top10']=='True', ['playerID', 'atbat', 'hits', 'battin
 
 Now let's plot all the players, sorted by observed batting average (lowest to highest). We'll plot the estimated player ability (`gamma`), along with the 95% uncertainty intervals around the estimates (in light gray). The points are also color coded by whether or not the player made at least one of the top 10 lists (in green) or not (in purple). The dashed line is the estimated mean player ability.
 
-
-
     
-![png](baseball_stats_39_0.png)
-    
+![Estimated player abilities and 95% uncertainty intervals. Players sorted by observed batting average (lowest to highest)](baseball_stats_39_0.png)
+<p class="caption">Estimated player abilities, with players sorted by observed batting average (lowest to highest). Green points indicate top 10 batters. 95% uncertainty intervals on ability estimates shown in gray. Dashed line represents estimated mean player ability. Right click on image to get full size version.</p>
 
 
 There are a few things to note in this graph. First, the ranking of ability estimates roughly correlate with the ranking of observed batting averages, as desired. There is a cluster of purple players to the right of the green players who have relatively low (actually, average) estimated batting ability, but high observed batting average. These are the players who weren't at bat very often, but who were successful when they were. The model did not have enough data on these players to move the ability estimates away from the prior. Similarly, there are players at the far left of the graph who cluster around the mean, even though their observed batting averages are zero, or nearly so. These are also players with only a few at bats, so their estimated abilities still smooth strongly into the prior.
@@ -1372,13 +1370,7 @@ So if the goal of estimating player ability is to identify the best players, the
 
 ## Matching the model to reality
 
-
-```python
-battingf.nlargest(3, 'frac_as_best')[['playerID', 'frac_as_best', 'batting_avg', 'gamma']]
-```
-
-
-
+Here are the three players who were most often ranked best in a Stan sample.
 
 <div>
 <style scoped>
@@ -1402,6 +1394,7 @@ battingf.nlargest(3, 'frac_as_best')[['playerID', 'frac_as_best', 'batting_avg',
       <th>frac_as_best</th>
       <th>batting_avg</th>
       <th>gamma</th>
+      <th>career batting average</th>
     </tr>
   </thead>
   <tbody>
@@ -1411,6 +1404,7 @@ battingf.nlargest(3, 'frac_as_best')[['playerID', 'frac_as_best', 'batting_avg',
       <td>0.3325</td>
       <td>0.353659</td>
       <td>0.306837</td>
+      <td>0.317</td>
     </tr>
     <tr>
       <th>3</th>
@@ -1418,6 +1412,7 @@ battingf.nlargest(3, 'frac_as_best')[['playerID', 'frac_as_best', 'batting_avg',
       <td>0.1810</td>
       <td>0.337481</td>
       <td>0.300198</td>
+      <td>0.288</td>
     </tr>
     <tr>
       <th>200</th>
@@ -1425,23 +1420,24 @@ battingf.nlargest(3, 'frac_as_best')[['playerID', 'frac_as_best', 'batting_avg',
       <td>0.1100</td>
       <td>0.331240</td>
       <td>0.296087</td>
+      <td>0.299</td>
     </tr>
   </tbody>
 </table>
 </div>
+<p class="caption">Top Three Players, probability of being best player, observed 2023 batting average, estimated batting ability, and career batting average as of May 2026.</p>
 
 
-
-Stan's selected best-ranked player by both "probability of being best" and point estimate criteria, `arraelu01`, is player Luis Arráez. Here's what his [Wikipedia page](https://en.wikipedia.org/wiki/Luis_Arr%C3%A1ez) has to say about him:
+The top player, `arraelu01`, is best-ranked by both "probability of being best" and point estimate criteria. He is Venezuelan-born infielder, Luis Arráez. Here's what his [Wikipedia page](https://en.wikipedia.org/wiki/Luis_Arr%C3%A1ez) has to say about him:
 
 > Known for his ability to put the ball in play and not striking out, Arráez is considered one of the best contact hitters of his generation. From 2022 to 2024, Arráez became the first player in MLB history to win three consecutive batting titles with three different teams.... He was also the second player in the modern era to win a batting title in each league and the first to do so in consecutive years. 
 
 Note that his career MLB batting average[^3] (calculated from 2019 through May 17, 2026) is 0.317. This is pretty close to our estimated `gamma` of 0.307. In fact, our estimate is a better prediction of Arráez's career performance (so far) than the simple observation of his 2023 season batting average is---even though we estimated his ability using only this single season!
 
-The next two players (as ranked by probability of being best) are Ronald Acuña, Jr. (career batting average so far = 0.288) and Freddie Freeman (career batting average so far = 0.299). Again, both Stan's estimates and career batting averages for all these players are below their observed 2023 season batting averages---showing that smoothing performance estimates to the population mean was a reasonable modeling choice. Note also that the career batting averages for these top three players also fell within the 95% uncertainty intervals of ability, as estimated by Stan. 
+The next two players (as ranked by probability of being best) are Ronald Acuña, Jr. and Freddie Freeman. Note that for all these players, both Stan's batting ability estimate and player career batting average are below their observed 2023 season batting averages---showing that smoothing performance estimates to the population mean was a reasonable modeling choice. Note also that the career batting averages for these top three players also fell within the 95% uncertainty intervals of ability, as estimated by Stan. 
 
 
-[^3]: All career batting averages as given by Wikipedia on May 19, 2026.
+[^3]: All career batting averages as given by Wikipedia on May 19, 2026.<br>
 
 ## Matching Summaries
 
@@ -1455,13 +1451,14 @@ std_ability = battingf['gamma'].std()
 print(f'Mean observed batting average: {mean_ba:.3f}, standard deviation {std_ba:.3f}.')
 print(f'Mean estimated batting ability: {mean_ability:.3f}, standard deviation {std_ability:.3f}.')
 ```
+```
+Mean observed batting average: 0.227, standard deviation 0.075.
+Mean estimated batting ability: 0.244, standard deviation 0.012.
+```
 
-    Mean observed batting average: 0.227, standard deviation 0.075.
-    Mean estimated batting ability: 0.244, standard deviation 0.012.
+As we saw previously, Stan's estimated mean batter ability is close to what was observed in the data, but the standard deviation of the ability estimates is much lower!  
 
-
-As we saw previously, Stan's estimated mean batter ability is close to what was observed in the data, but the standard deviation of the ability estimates is much lower! 
-This is not surprising: we also know that the number of player at-bats varied widely, and players with few at-bats will have observed batting averages that will tend to over- or under- estimate their actual abilities. This is why observed batting average standard deviation is so much higher than estimated batting ability standard deviation.
+This is not surprising: we also know that the number of player at-bats varied widely, and players with few at-bats will have observed batting averages that will tend to over- or under- estimate their actual abilities. This is why **observed batting average standard deviation is so much higher than estimated batting ability standard deviation**.
 
 In order to properly compare Stan's ability estimates to actual observations, we have to simulate the season in each Stan sample. That is, in each possible world, we give each player the same number of at-bats as they had in 2023, and generate a plausible observed batting average, given that number of at-bats. This is shown below.
 
@@ -1502,21 +1499,7 @@ synthetic_hitrate_frame
       <th>abramcj01</th>
       <th>abreujo02</th>
       <th>abreuwi02</th>
-      <th>acunaro01</th>
-      <th>adamewi01</th>
-      <th>adamsjo03</th>
-      <th>adamsri03</th>
-      <th>adelljo01</th>
-      <th>adriaeh01</th>
-      <th>aguilje01</th>
       <th>...</th>
-      <th>wongko01</th>
-      <th>wynnsau01</th>
-      <th>yastrmi01</th>
-      <th>yelicch01</th>
-      <th>yepezju01</th>
-      <th>yoshima02</th>
-      <th>youngja02</th>
       <th>youngja03</th>
       <th>zavalse01</th>
       <th>zuninmi01</th>
@@ -1528,21 +1511,7 @@ synthetic_hitrate_frame
       <td>0.243339</td>
       <td>0.246296</td>
       <td>0.381579</td>
-      <td>0.345257</td>
-      <td>0.235081</td>
-      <td>0.205128</td>
-      <td>0.286713</td>
-      <td>0.327586</td>
-      <td>0.1</td>
-      <td>0.288462</td>
       <td>...</td>
-      <td>0.254464</td>
-      <td>0.276923</td>
-      <td>0.209091</td>
-      <td>0.256364</td>
-      <td>0.250000</td>
-      <td>0.216015</td>
-      <td>0.255814</td>
       <td>0.177570</td>
       <td>0.245714</td>
       <td>0.250000</td>
@@ -1552,21 +1521,7 @@ synthetic_hitrate_frame
       <td>0.257549</td>
       <td>0.209259</td>
       <td>0.368421</td>
-      <td>0.317263</td>
-      <td>0.218807</td>
-      <td>0.333333</td>
-      <td>0.188811</td>
-      <td>0.224138</td>
-      <td>0.2</td>
-      <td>0.211538</td>
       <td>...</td>
-      <td>0.223214</td>
-      <td>0.207692</td>
-      <td>0.221212</td>
-      <td>0.285455</td>
-      <td>0.216667</td>
-      <td>0.260708</td>
-      <td>0.232558</td>
       <td>0.261682</td>
       <td>0.228571</td>
       <td>0.169355</td>
@@ -1576,21 +1531,7 @@ synthetic_hitrate_frame
       <td>0.238011</td>
       <td>0.262963</td>
       <td>0.210526</td>
-      <td>0.318818</td>
-      <td>0.209765</td>
-      <td>0.205128</td>
-      <td>0.328671</td>
-      <td>0.275862</td>
-      <td>0.4</td>
-      <td>0.240385</td>
       <td>...</td>
-      <td>0.223214</td>
-      <td>0.307692</td>
-      <td>0.248485</td>
-      <td>0.260000</td>
-      <td>0.250000</td>
-      <td>0.275605</td>
-      <td>0.186047</td>
       <td>0.224299</td>
       <td>0.200000</td>
       <td>0.266129</td>
@@ -1600,21 +1541,7 @@ synthetic_hitrate_frame
       <td>0.282416</td>
       <td>0.253704</td>
       <td>0.276316</td>
-      <td>0.284603</td>
-      <td>0.260398</td>
-      <td>0.256410</td>
-      <td>0.244755</td>
-      <td>0.241379</td>
-      <td>0.4</td>
-      <td>0.221154</td>
       <td>...</td>
-      <td>0.245536</td>
-      <td>0.284615</td>
-      <td>0.193939</td>
-      <td>0.232727</td>
-      <td>0.300000</td>
-      <td>0.279330</td>
-      <td>0.279070</td>
       <td>0.214953</td>
       <td>0.291429</td>
       <td>0.225806</td>
@@ -1624,21 +1551,7 @@ synthetic_hitrate_frame
       <td>0.218472</td>
       <td>0.237037</td>
       <td>0.236842</td>
-      <td>0.272162</td>
-      <td>0.231465</td>
-      <td>0.205128</td>
-      <td>0.223776</td>
-      <td>0.293103</td>
-      <td>0.8</td>
-      <td>0.163462</td>
       <td>...</td>
-      <td>0.200893</td>
-      <td>0.184615</td>
-      <td>0.248485</td>
-      <td>0.270909</td>
-      <td>0.216667</td>
-      <td>0.240223</td>
-      <td>0.232558</td>
       <td>0.214953</td>
       <td>0.211429</td>
       <td>0.209677</td>
@@ -1652,41 +1565,13 @@ synthetic_hitrate_frame
       <td>...</td>
       <td>...</td>
       <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
     </tr>
     <tr>
       <th>3995</th>
       <td>0.289520</td>
       <td>0.227778</td>
       <td>0.421053</td>
-      <td>0.284603</td>
-      <td>0.215190</td>
-      <td>0.205128</td>
-      <td>0.279720</td>
-      <td>0.172414</td>
-      <td>0.0</td>
-      <td>0.211538</td>
       <td>...</td>
-      <td>0.214286</td>
-      <td>0.238462</td>
-      <td>0.203030</td>
-      <td>0.270909</td>
-      <td>0.316667</td>
-      <td>0.277467</td>
-      <td>0.209302</td>
       <td>0.224299</td>
       <td>0.234286</td>
       <td>0.241935</td>
@@ -1696,21 +1581,7 @@ synthetic_hitrate_frame
       <td>0.253996</td>
       <td>0.229630</td>
       <td>0.381579</td>
-      <td>0.293935</td>
-      <td>0.222423</td>
-      <td>0.307692</td>
-      <td>0.209790</td>
-      <td>0.172414</td>
-      <td>0.2</td>
-      <td>0.307692</td>
       <td>...</td>
-      <td>0.156250</td>
-      <td>0.223077</td>
-      <td>0.203030</td>
-      <td>0.281818</td>
-      <td>0.166667</td>
-      <td>0.305400</td>
-      <td>0.209302</td>
       <td>0.233645</td>
       <td>0.217143</td>
       <td>0.225806</td>
@@ -1720,21 +1591,7 @@ synthetic_hitrate_frame
       <td>0.236234</td>
       <td>0.216667</td>
       <td>0.250000</td>
-      <td>0.306376</td>
-      <td>0.227848</td>
-      <td>0.307692</td>
-      <td>0.181818</td>
-      <td>0.224138</td>
-      <td>0.5</td>
-      <td>0.192308</td>
       <td>...</td>
-      <td>0.218750</td>
-      <td>0.253846</td>
-      <td>0.242424</td>
-      <td>0.270909</td>
-      <td>0.266667</td>
-      <td>0.249534</td>
-      <td>0.209302</td>
       <td>0.252336</td>
       <td>0.188571</td>
       <td>0.241935</td>
@@ -1744,21 +1601,7 @@ synthetic_hitrate_frame
       <td>0.275311</td>
       <td>0.251852</td>
       <td>0.236842</td>
-      <td>0.295490</td>
-      <td>0.216998</td>
-      <td>0.256410</td>
-      <td>0.195804</td>
-      <td>0.206897</td>
-      <td>0.0</td>
-      <td>0.173077</td>
       <td>...</td>
-      <td>0.245536</td>
-      <td>0.230769</td>
-      <td>0.248485</td>
-      <td>0.252727</td>
-      <td>0.200000</td>
-      <td>0.324022</td>
-      <td>0.186047</td>
       <td>0.196262</td>
       <td>0.360000</td>
       <td>0.266129</td>
@@ -1768,21 +1611,7 @@ synthetic_hitrate_frame
       <td>0.291297</td>
       <td>0.244444</td>
       <td>0.263158</td>
-      <td>0.259720</td>
-      <td>0.278481</td>
-      <td>0.282051</td>
-      <td>0.286713</td>
-      <td>0.189655</td>
-      <td>0.3</td>
-      <td>0.240385</td>
       <td>...</td>
-      <td>0.223214</td>
-      <td>0.276923</td>
-      <td>0.263636</td>
-      <td>0.254545</td>
-      <td>0.200000</td>
-      <td>0.240223</td>
-      <td>0.186047</td>
       <td>0.271028</td>
       <td>0.165714</td>
       <td>0.250000</td>
@@ -1791,9 +1620,9 @@ synthetic_hitrate_frame
 </table>
 <p>4000 rows × 656 columns</p>
 </div>
+<p class="caption">Each row represents synthetic batting statistics for the 2023 season, given each player's hypothesized batting ability in that "possible world." Eash player's at-bats is the same as in the actual 2023 season.</p>
 
-
-
+From these synthetic replays of 2023, we can estimate plausible means and standard deviations of observed batting average.
 
 ```python
 # get the mean and standard devation on ability for each sample world
@@ -1808,33 +1637,21 @@ print(f'Mean observed batting average: {mean_ba:.3f}, standard deviation {std_ba
 print(f'Mean synthetic batting average observations: {mean_synth:.3f}, standard deviation {std_synth:.3f}.')
 
 ```
-
-    Mean observed batting average: 0.227, standard deviation 0.075.
-    Mean synthetic batting average observations: 0.244, standard deviation 0.078.
-
-
-
-```python
-(
-    ggplot(std_synth_vec.to_frame(name="standard deviation"), aes(x="standard deviation")) + 
-    geom_density(color="darkblue") + 
-    geom_vline(xintercept = std_synth, color="darkblue") + 
-    geom_vline(xintercept=std_ba, color="darkgray", linetype="dashed") + 
-    ggtitle("Batting average standard deviation, synthetic scenarios\nObserved standard deviation as dashed line")
-)
+```
+Mean observed batting average: 0.227, standard deviation 0.075.
+Mean synthetic batting average observations: 0.244, standard deviation 0.078.
 ```
 
-
+This is much closer to what was actually observed! We can also plot the distribution of batting average standard deviations in each synthetic season, and compare them to the actual observed batting average standard deviaion.
     
-![png](baseball_stats_48_0.png)
-    
+![Distribution of synthetic standard deviations](baseball_stats_48_0.png)
+<p class="caption">The distribution of batting-average standard deviations, with their mean, in dark blue. The gray dashed line is the actual batting-average standard deviation.</p>
 
-
-Once we simulate the at-bats, the behaviors in the synthetic worlds are consistent with what was observed in the actual data. This also gives us confidence that our model is a reasonable approximation of the real world baseball hit generation process. Specifically, it's an approximation we can use to answer the questions we want to ask, like "who are the best batters?".
+Once we simulate the at-bats, the behaviors in the synthetic worlds are consistent with what was observed in the actual data: observed batting averages vary more widely than innate batting abilities. This also gives us confidence that our model is a reasonable approximation of the real world baseball hit generation process. Specifically, it's an approximation we can use to answer the questions we want to ask, like "who are the best batters?".
 
 ## Estimate what you want to know, not just what you can observe
 
-As we've seen in the above example, an advantage of probabilistic modeling is that the analyst is able to distinguish between *observations* and (potentially unobservable) *quantities of interest*. If you, the analyst, can describe a probabilistic process that relates *what you can see* to *what you actually need to know*, then probabilistic modeling programs like Stan can estimate these quantities for you. By specifying the process to describe your problem and your task goal, you can add in prior knowledge or assumptions about the domain in a principled, documentable way, without having to resort to ad-hoc tweaks or data processing. 
+As we've seen in the above example, an advantage of probabilistic modeling is that the analyst is able to distinguish between *observations* and (potentially unobservable) *quantities of interest*. If you, the analyst, can describe a probabilistic process that relates **_what you can see_** to **_what you actually need to know_**, then probabilistic modeling programs like Stan can estimate these quantities for you. By specifying the process to describe your problem and your task goal, you can add in prior knowledge or assumptions about the domain in a principled, documentable way, without having to resort to ad-hoc tweaks or data processing. 
 
 In addition, probabilistic modeling systems that are based on Monte Carlo sampling (like Stan) provide samples of "possible worlds" that are consistent with the training data. You can use these samples not only to calculate point estimates of quantities of interest, but also uncertainty intervals around those estimates. You can also use the possible worlds to run simulations and scenarios (like, "who are the top 10 players in each possible world?") to further help you in decision-making. 
 

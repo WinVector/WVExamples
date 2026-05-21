@@ -1,0 +1,2081 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Who&#39;s the Best Batter? Estimating Probabilities from Unevenly Collected Data</title>
+		<meta name="description" content="Win Vector technical articles and example code">
+		<link rel="alternate" href="feed/feed.xml" type="application/atom+xml" title="Win Vector Examples">
+		
+		<style>/**
+ * okaidia theme for JavaScript, CSS and HTML
+ * Loosely based on Monokai textmate theme by http://www.monokai.nl/
+ * @author ocodia
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: #f8f8f2;
+	background: none;
+	text-shadow: 0 1px rgba(0, 0, 0, 0.3);
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	font-size: 1em;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+	border-radius: 0.3em;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background: #272822;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+	white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: #8292a2;
+}
+
+.token.punctuation {
+	color: #f8f8f2;
+}
+
+.token.namespace {
+	opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #f92672;
+}
+
+.token.boolean,
+.token.number {
+	color: #ae81ff;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+	color: #a6e22e;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string,
+.token.variable {
+	color: #f8f8f2;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.function,
+.token.class-name {
+	color: #e6db74;
+}
+
+.token.keyword {
+	color: #66d9ef;
+}
+
+.token.regex,
+.token.important {
+	color: #fd971f;
+}
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
+}
+/*
+ * New diff- syntax
+ */
+
+pre[class*="language-diff-"] {
+	--eleventy-code-padding: 1.25em;
+	padding-left: var(--eleventy-code-padding);
+	padding-right: var(--eleventy-code-padding);
+}
+.token.deleted {
+	background-color: hsl(0, 51%, 37%);
+	color: inherit;
+}
+.token.inserted {
+	background-color: hsl(126, 31%, 39%);
+	color: inherit;
+}
+
+/* Make the + and - characters unselectable for copy/paste */
+.token.prefix.unchanged,
+.token.prefix.inserted,
+.token.prefix.deleted {
+	-webkit-user-select: none;
+	user-select: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+.token.prefix.inserted,
+.token.prefix.deleted {
+	width: var(--eleventy-code-padding);
+	background-color: rgba(0,0,0,.2);
+}
+
+/* Optional: full-width background color */
+.token.inserted:not(.prefix),
+.token.deleted:not(.prefix) {
+	display: block;
+	margin-left: calc(-1 * var(--eleventy-code-padding));
+	margin-right: calc(-1 * var(--eleventy-code-padding));
+	text-decoration: none; /* override del, ins, mark defaults */
+	color: inherit; /* override del, ins, mark defaults */
+}
+/* This is an arbitrary CSS string added to the bundle */
+/* Defaults */
+:root {
+	--font-family: -apple-system, system-ui, sans-serif;
+	--font-family-monospace: Consolas, Menlo, Monaco, Andale Mono WT, Andale Mono, Lucida Console, Lucida Sans Typewriter, DejaVu Sans Mono, Bitstream Vera Sans Mono, Liberation Mono, Nimbus Mono L, Courier New, Courier, monospace;
+}
+
+/* Theme colors */
+:root {
+	--color-gray-20: #e0e0e0;
+	--color-gray-50: #C0C0C0;
+	--color-gray-90: #333;
+
+	--background-color: #fff;
+
+	--text-color: var(--color-gray-90);
+	--text-color-link: #082840;
+	--text-color-link-active: #5f2b48;
+	--text-color-link-visited: #17050F;
+
+	--caption-color: #878580;
+
+	--syntax-tab-size: 2;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--color-gray-20: #e0e0e0;
+		--color-gray-50: #C0C0C0;
+		--color-gray-90: #dad8d8;
+
+		/* --text-color is assigned to --color-gray-_ above */
+		--text-color-link: #1493fb;
+		--text-color-link-active: #6969f7;
+		--text-color-link-visited: #a6a6f8;
+
+		--background-color: #15202b;
+	}
+}
+
+
+/* Global stylesheet */
+* {
+	box-sizing: border-box;
+}
+
+@view-transition {
+	navigation: auto;
+}
+
+html,
+body {
+	padding: 0;
+	margin: 0 auto;
+	font-family: var(--font-family);
+	color: var(--text-color);
+	background-color: var(--background-color);
+}
+html {
+	overflow-y: scroll;
+}
+body {
+	max-width: 50em;
+}
+
+/* https://www.a11yproject.com/posts/how-to-hide-content/ */
+.visually-hidden {
+	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
+	height: 1px;
+	overflow: hidden;
+	position: absolute;
+	white-space: nowrap;
+	width: 1px;
+}
+
+/* Fluid images via https://www.zachleat.com/web/fluid-images/ */
+img,
+video,
+iframe {
+  max-width: 100%;
+}
+img[width][height] {
+  height: auto;
+}
+img[src$=".svg"] {
+  width: 100%;
+  height: auto;
+  max-width: none;
+}
+
+p:last-child {
+	margin-bottom: 0;
+}
+p {
+	line-height: 1.5;
+}
+
+p.caption {
+	text-align: center;
+	font-style: italic;
+	font-size: 0.9em;
+	color: var(--caption-color);
+ }
+
+li {
+	line-height: 1.5;
+}
+
+a[href] {
+	color: var(--text-color-link);
+}
+a[href]:visited {
+	color: var(--text-color-link-visited);
+}
+a[href]:hover,
+a[href]:active {
+	color: var(--text-color-link-active);
+}
+
+main,
+footer {
+	padding: 1rem;
+}
+main :first-child {
+	margin-top: 0;
+}
+
+/* Footer */
+hr {
+    border: none;
+    background-color: #DADADB;
+    height: 1px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+header {
+	border-bottom: 1px dashed var(--color-gray-20);
+}
+header:after {
+	content: "";
+	display: table;
+	clear: both;
+}
+
+.links-nextprev {
+	display: flex;
+	justify-content: space-between;
+	gap: .5em 1em;
+	list-style: "";
+	border-top: 1px dashed var(--color-gray-20);
+	padding: 1em 0;
+}
+.links-nextprev > * {
+	flex-grow: 1;
+}
+.links-nextprev-next {
+	text-align: right;
+}
+
+table {
+	margin: 1em 0;
+}
+table td,
+table th {
+	padding-right: 1em;
+}
+
+pre,
+code {
+	font-family: var(--font-family-monospace);
+}
+pre:not([class*="language-"]) {
+	margin: .5em 0;
+	line-height: 1.375; /* 22px /16 */
+	-moz-tab-size: var(--syntax-tab-size);
+	-o-tab-size: var(--syntax-tab-size);
+	tab-size: var(--syntax-tab-size);
+	-webkit-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+	direction: ltr;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	overflow-x: auto;
+}
+code {
+	word-break: break-all;
+}
+
+/* Header */
+header {
+	display: flex;
+	gap: 1em .5em;
+	flex-wrap: wrap;
+	align-items: center;
+	padding: 1em;
+}
+.home-link {
+	font-size: 1em; /* 16px /16 */
+	font-weight: 700;
+	margin-right: 2em;
+}
+.home-link:link:not(:hover) {
+	text-decoration: none;
+}
+
+/* for collapsible text blocks */
+
+details {  margin: 1em 0;  padding: 1em;  background-color: #f5f5f5;  border-left: 4px solid #0066cc;}
+summary {  cursor: pointer;  font-weight: bold;  color: #0066cc;}
+summary:hover {  text-decoration: underline;}
+
+/* Nav */
+.nav {
+	display: flex;
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+.nav-item {
+	display: inline-block;
+	margin-right: 1em;
+}
+.nav-item a[href]:not(:hover) {
+	text-decoration: none;
+}
+.nav a[href][aria-current="page"] {
+	text-decoration: underline;
+}
+
+/* Posts list */
+.postlist {
+	list-style: none;
+	padding: 0;
+	padding-left: 1.5rem;
+}
+.postlist-item {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	counter-increment: start-from -1;
+	margin-bottom: 1em;
+}
+.postlist-item:before {
+	display: inline-block;
+	pointer-events: none;
+	content: "" counter(start-from, decimal-leading-zero) ". ";
+	line-height: 100%;
+	text-align: right;
+	margin-left: -1.5rem;
+}
+.postlist-date,
+.postlist-item:before {
+	font-size: 0.8125em; /* 13px /16 */
+	color: var(--color-gray-90);
+}
+.postlist-date {
+	word-spacing: -0.5px;
+}
+.postlist-link {
+	font-size: 1.1875em; /* 19px /16 */
+	font-weight: 700;
+	flex-basis: calc(100% - 1.5rem);
+	padding-left: .25em;
+	padding-right: .5em;
+	text-underline-position: from-font;
+	text-underline-offset: 0;
+	text-decoration-thickness: 1px;
+}
+.postlist-item-active .postlist-link {
+	font-weight: bold;
+}
+
+/* Tags */
+.post-tag {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	text-transform: capitalize;
+	font-style: italic;
+}
+.postlist-item > .post-tag {
+	align-self: center;
+}
+
+/* Tags list */
+.post-metadata {
+	flex-wrap: wrap;
+	gap: .5em;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+.post-metadata time {
+	margin-right: 1em;
+}
+.taglist {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: .5em;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}</style>
+	</head>
+	<body>
+		<a href="#skip" class="visually-hidden">Skip to main content</a>
+
+		<header>
+			<a href="/WVExamples/" class="home-link">Win Vector Examples</a>
+			<nav>
+				<h2 class="visually-hidden" id="top-level-navigation-menu">Top level navigation menu</h2>
+				<ul class="nav">
+					<li class="nav-item"><a href="/WVExamples/">Home</a></li>
+					<li class="nav-item"><a href="/WVExamples/blog/">Archive</a></li>
+					<li class="nav-item"><a href="/WVExamples/about/">About</a></li>
+					<li class="nav-item"><a href="/WVExamples/feed/feed.xml">Feed</a></li>
+				</ul>
+			</nav>
+		</header>
+
+		<main id="skip">
+			<heading-anchors>
+				
+
+<h1 id="whos-the-best-batter-estimating-probabilities-from-unevenly-collected-data">Who&#39;s the Best Batter? Estimating Probabilities from Unevenly Collected Data</h1>
+
+<ul class="post-metadata">
+	<li>Nina Zumel</li>
+	<li><time datetime="2026-05-20">20 May 2026</time></li>
+</ul>
+<ul class="taglist">
+	<li><a href="/WVExamples/tags/probabilistic-modeling/" class="post-tag">probabilistic  modeling</a>, </li>
+	<li><a href="/WVExamples/tags/python/" class="post-tag">python</a>, </li>
+	<li><a href="/WVExamples/tags/stan/" class="post-tag">stan</a>, </li>
+	<li><a href="/WVExamples/tags/bayesian-data-analysis/" class="post-tag">Bayesian data analysis</a></li>
+</ul>
+
+<br><br>
+<ul class="post-metadata">
+	<li><a href="https://github.com/WinVector/WVExamples/tree/main/BattingEstimation_Stan">Source code for this article</a></li>
+</ul>
+
+
+<br>
+<hr>
+
+<p>In this article, we look at the problem of estimating and comparing probabilities about a population of subjects from unevenly collected observations. Some examples might include:</p>
+<ul>
+<li>The perceived quality of a movie (how often is a movie positively reviewed) when some movies have far more reviews than others.</li>
+<li>The effectiveness of various ad campaigns, when some compaigns have had more exposure than others.</li>
+<li>The efficacy of a certain medical procedure by hospital, when some hospitals have had more cases than others.</li>
+</ul>
+<p>For our specific task, we'll try to estimate the &quot;innate&quot; batting ability (the probability of making a hit when at bat)<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup> of major league baseball players in 2023<sup class="footnote-ref"><a href="#fn2" id="fnref2">[2]</a></sup>. For the sake of this article, we will take this single season of data as everything that we know about these players and their batting statistics.</p>
+<p>First, let's take a quick look at the data.</p>
+<pre class="language-python" tabindex="0"><code class="language-python">battingf <span class="token operator">=</span> pd<span class="token punctuation">.</span>read_csv<span class="token punctuation">(</span>datadir <span class="token operator">+</span> <span class="token string">'battingstats.tsv'</span><span class="token punctuation">,</span> sep <span class="token operator">=</span> <span class="token string">"\t"</span><span class="token punctuation">)</span>
+battingf</code></pre>
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+<p>.dataframe tbody tr th {<br>
+vertical-align: top;<br>
+}</p>
+<p>.dataframe thead th {<br>
+text-align: right;<br>
+}<br>
+</style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>playerID</th>
+      <th>atbat</th>
+      <th>hits</th>
+      <th>batting_avg</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>abramcj01</td>
+      <td>563</td>
+      <td>138</td>
+      <td>0.245115</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>abreujo02</td>
+      <td>540</td>
+      <td>128</td>
+      <td>0.237037</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>abreuwi02</td>
+      <td>76</td>
+      <td>24</td>
+      <td>0.315789</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>acunaro01</td>
+      <td>643</td>
+      <td>217</td>
+      <td>0.337481</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>adamewi01</td>
+      <td>553</td>
+      <td>120</td>
+      <td>0.216998</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>651</th>
+      <td>yoshima02</td>
+      <td>537</td>
+      <td>155</td>
+      <td>0.288641</td>
+    </tr>
+    <tr>
+      <th>652</th>
+      <td>youngja02</td>
+      <td>43</td>
+      <td>8</td>
+      <td>0.186047</td>
+    </tr>
+    <tr>
+      <th>653</th>
+      <td>youngja03</td>
+      <td>107</td>
+      <td>27</td>
+      <td>0.252336</td>
+    </tr>
+    <tr>
+      <th>654</th>
+      <td>zavalse01</td>
+      <td>175</td>
+      <td>30</td>
+      <td>0.171429</td>
+    </tr>
+    <tr>
+      <th>655</th>
+      <td>zuninmi01</td>
+      <td>124</td>
+      <td>22</td>
+      <td>0.177419</td>
+    </tr>
+  </tbody>
+</table>
+<p>656 rows × 4 columns</p>
+</div>
+<p>We can calculate some summary statistics, too.</p>
+<details>
+<summary>Click to see code</summary>
+<pre class="language-python" tabindex="0"><code class="language-python">nplayers <span class="token operator">=</span> battingf<span class="token punctuation">.</span>shape<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f'Population of </span><span class="token interpolation"><span class="token punctuation">{</span>nplayers<span class="token punctuation">}</span></span><span class="token string"> players.'</span></span><span class="token punctuation">)</span>
+
+mean_ba <span class="token operator">=</span> battingf<span class="token punctuation">[</span><span class="token string">'batting_avg'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span>
+std_ba <span class="token operator">=</span> battingf<span class="token punctuation">[</span><span class="token string">'batting_avg'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>std<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f'Mean batting average: </span><span class="token interpolation"><span class="token punctuation">{</span>mean_ba<span class="token punctuation">:</span><span class="token format-spec">.2f</span><span class="token punctuation">}</span></span><span class="token string">, standard deviation </span><span class="token interpolation"><span class="token punctuation">{</span>std_ba<span class="token punctuation">:</span><span class="token format-spec">.2f</span><span class="token punctuation">}</span></span><span class="token string">'</span></span><span class="token punctuation">)</span>
+
+mean_atbat <span class="token operator">=</span> battingf<span class="token punctuation">[</span><span class="token string">'atbat'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span>
+std_atbat <span class="token operator">=</span> battingf<span class="token punctuation">[</span><span class="token string">'atbat'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>std<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f'Mean at bats: </span><span class="token interpolation"><span class="token punctuation">{</span>mean_atbat<span class="token punctuation">:</span><span class="token format-spec">.2f</span><span class="token punctuation">}</span></span><span class="token string">, standard deviation </span><span class="token interpolation"><span class="token punctuation">{</span>std_atbat<span class="token punctuation">:</span><span class="token format-spec">.2f</span><span class="token punctuation">}</span></span><span class="token string">'</span></span><span class="token punctuation">)</span></code></pre>
+</details>
+<pre><code>    Population of 656 players.
+    Mean batting average: 0.23, standard deviation 0.07
+    Mean at bats: 250.64, standard deviation 192.45
+</code></pre>
+<p>Given this information, how do we estimate players' batting ability?</p>
+<p>You may be tempted to simply use a player's observed batting average as an estimate of their batting skill. One issue with this is that not all players get the same number of at-bats. Let's look at the batting averages for all the players, sorted by their number of times at bat. The horizontal line on the graph represents the mean batting average of the population.</p>
+<p><picture><source type="image/avif" srcset="/WVExamples/blog/batting-estimation-stan/baseball_stats/f_Yzykdjkd-1280.avif 1280w"><source type="image/webp" srcset="/WVExamples/blog/batting-estimation-stan/baseball_stats/f_Yzykdjkd-1280.webp 1280w"><img loading="lazy" decoding="async" src="/WVExamples/blog/batting-estimation-stan/baseball_stats/f_Yzykdjkd-1280.png" alt="Scatterplot of batting averages vs. times at bat, MLB 2023 season" width="1280" height="960"></picture></p>
+<p class="caption">Batting averages versus times at bat. Dark blue horizontal line represents population mean batting average.</p>    
+<p>As you can see, the number of at-bats for players in 2023 varied widely; some players were up hundreds of times, and some fewer than ten times.  For players with a lot of at-bats, their observed batting average is probabably a good estimate of their innate batting ability. But for players with fewer at-bats, their observed batting average is more likely to be an over or under estimate of their ability.</p>
+<h2 id="finding-the-top-10-batters">Finding the Top 10 Batters</h2>
+<p>We can make this point dramatically by using our naive batting ability estimates to answer the question, <strong><em>Who are the top 10 batters</em></strong>?</p>
+<pre class="language-python" tabindex="0"><code class="language-python">naive_top10 <span class="token operator">=</span> battingf<span class="token punctuation">.</span>nlargest<span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">,</span> <span class="token string">'batting_avg'</span><span class="token punctuation">)</span>
+naive_top10</code></pre>
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+<p>.dataframe tbody tr th {<br>
+vertical-align: top;<br>
+}</p>
+<p>.dataframe thead th {<br>
+text-align: right;<br>
+}<br>
+</style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>playerID</th>
+      <th>atbat</th>
+      <th>hits</th>
+      <th>batting_avg</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>140</th>
+      <td>culbech01</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1.000000</td>
+    </tr>
+    <tr>
+      <th>124</th>
+      <td>colliza01</td>
+      <td>4</td>
+      <td>2</td>
+      <td>0.500000</td>
+    </tr>
+    <tr>
+      <th>325</th>
+      <td>lopezal03</td>
+      <td>2</td>
+      <td>1</td>
+      <td>0.500000</td>
+    </tr>
+    <tr>
+      <th>450</th>
+      <td>perezmi03</td>
+      <td>8</td>
+      <td>4</td>
+      <td>0.500000</td>
+    </tr>
+    <tr>
+      <th>593</th>
+      <td>tuckeco01</td>
+      <td>8</td>
+      <td>4</td>
+      <td>0.500000</td>
+    </tr>
+    <tr>
+      <th>626</th>
+      <td>wallfo01</td>
+      <td>13</td>
+      <td>6</td>
+      <td>0.461538</td>
+    </tr>
+    <tr>
+      <th>583</th>
+      <td>toroab01</td>
+      <td>18</td>
+      <td>8</td>
+      <td>0.444444</td>
+    </tr>
+    <tr>
+      <th>165</th>
+      <td>downsje01</td>
+      <td>5</td>
+      <td>2</td>
+      <td>0.400000</td>
+    </tr>
+    <tr>
+      <th>229</th>
+      <td>graytr01</td>
+      <td>5</td>
+      <td>2</td>
+      <td>0.400000</td>
+    </tr>
+    <tr>
+      <th>121</th>
+      <td>clemeer01</td>
+      <td>50</td>
+      <td>19</td>
+      <td>0.380000</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<p>Do you trust this ranking? Probably not---notice that most of the players in the top ten using this naive measure have actually been at bat very few times, and their batting averages are unrealistically high. Remember: the average batting average in the league for this season is 0.23, and the standard deviation is small. Batting averages of 1.0 or even 0.5 are highly improbable estimates of actual player ability.</p>
+<p>This is analogous to sorting the rankings of a product on an online shopping site. Which assessment would you consider more reliable:</p>
+<ul>
+<li>one with a five-star average rating calculated from only one or two ratings,</li>
+<li>or one with a 4.5 star rating calculated from 200 ratings?</li>
+</ul>
+<p>Personally, I would be more likely to trust the assesment of the second product.</p>
+<p>Given that our observations of the players are so uneven, is there a better way estimate how good a batter each player really is?</p>
+<p>We would like a method that handles players with very few observations in a reasonable way. If a player has been at bat only once, their observed batting average is either 1 or 0: either they look perfect, or they look terrible. Since they are most likely neither, we'd like to assume a reasonable estimate of their batting ability, one we can use while we are waiting for more data. And of course, we want a method where the estimate improves as more data becomes available.</p>
+<h2 id="estimating-batting-ability-with-probabilistic-modeling">Estimating Batting Ability with Probabilistic Modeling</h2>
+<p>One approach that robustly handles players with few at-bats is <em>probabilistic modeling</em>. In this article, we will implement a probabilistic model for the batting ability problem using <a href="https://mc-stan.org/">Stan</a>. We won't explain the Stan code in depth, but we will try to explain what the model is doing.</p>
+<p>The idea behind this model is that a player's empirical batting performance is merely an <em>observable approximation</em> of the player's <em>unobservable</em> &quot;innate batting ability,&quot; which we'll define as the probability that a batter will make a hit when he or she is at bat. This is illustrated in the figure below.</p>
+<p><picture><source type="image/avif" srcset="/WVExamples/blog/batting-estimation-stan/baseball_stats/53Z4ivu1OB-845.avif 845w"><source type="image/webp" srcset="/WVExamples/blog/batting-estimation-stan/baseball_stats/53Z4ivu1OB-845.webp 845w"><img loading="lazy" decoding="async" src="/WVExamples/blog/batting-estimation-stan/baseball_stats/53Z4ivu1OB-845.png" alt="Model of Batting Process" width="845" height="421"></picture></p>
+<p class="caption">Working model of the hit generation process. An individual batter has a given (unobservable) batting ability, drawn from the distribution of batting abilities for the population. For the player's <code>n</code> at-bats, we observe the number of hits and misses during play.
+</p><p>In order to estimate player batting ability, which we cannot directly observe, we will define a probabilistic process to &quot;explain&quot; the observable batting performance in terms of the unobservable player ability.</p>
+<p>Specifically, we'll model each player as a coin, where a hit is &quot;heads&quot;, and the number of at-bats is the number of flips. We'll call the (unknown) probability of coming up heads (getting a hit) <code>gamma</code>. Then we can model each player as a binomial:</p>
+<pre><code>      hits_i ~ binomial(atbat_i, gamma_i)
+</code></pre>
+<p>In other words, <code>gamma</code> is the player's innate batting ability.</p>
+<p>We'll further assume that the player <code>gamma</code>s are distributed around some (also unknown) &quot;global player batting ability.&quot; The idea here is that all the players come from the same population, so their batting performances are somewhat similar. This implies that player batting abilities tend to cluster around some average batting ability, and very high (or low) abilities are unlikely.</p>
+<p>This is <em>only</em> an assumption, but we consider it plausible because of real-life observations like &quot;batting averages for professional players tend to be around 0.25ish, and super high batting averages are unlikely&quot;---an observation we can back up with the data.</p>
+<p><picture><source type="image/avif" srcset="/WVExamples/blog/batting-estimation-stan/baseball_stats/5OQBuynJiU-1280.avif 1280w"><source type="image/webp" srcset="/WVExamples/blog/batting-estimation-stan/baseball_stats/5OQBuynJiU-1280.webp 1280w"><img loading="lazy" decoding="async" src="/WVExamples/blog/batting-estimation-stan/baseball_stats/5OQBuynJiU-1280.png" alt="Distribution of batting averages in the 2023 season" width="1280" height="960"></picture></p>
+<p class="caption">Distribution of observed batting averages for the 2023 MLB season.
+</p><p>An advantage of probabilistic modeling is that it allows us to incorporate these types of assumptions or domain knowledge into our analysis in a principled way. With more common frequentist analyses, like the above naive approach, we don't have a way to express notions like &quot;player abilities are in a tight, non-uniform distribution,&quot; without resorting to ad-hoc rules such as &quot;only consider batters who have more than 100 at-bats.&quot;</p>
+<p>To continue: we want to model the &quot;global player batting ability&quot; as a distribution from which individual player <code>gamma</code>s are drawn. Since the players are binomial, we'll assume that the <code>gamma</code>s are distributed as a beta distribution.</p>
+<pre><code>      gamma ~ beta(a, b)
+</code></pre>
+<p>In Bayesian parlance, the distribution <code>beta(a, b)</code> represents the <em>priors</em> on <code>gamma</code> (player batting ability). For a player with only a few at-bats, there is little information on their individual ability, so the model will estimate that their batting ability is near some average batting ability. For players with many at-bats, the model will have enough information to pull the estimate away from the grand mean.</p>
+<p>Intuitively, the  parameters <code>a</code> and <code>b</code> represent <code>a</code> &quot;pseudo-hits&quot; for <code>a+b</code> &quot;pseudo-atbats&quot;. The larger <code>a+b</code> is, the more observations will be required to pull a player's estimated ability away from the<br>
+grand mean (<code>a/(a+b)</code>). In other words, this formulation smooths all the estimated batting averages towards some (estimated) grand mean. The quantity <code>a+b</code> specifies the strength of the smoothing.</p>
+<p>We can control how much we smooth to the mean, and what the mean is, by explicitly picking <code>a</code> and <code>b</code>. In this model, however, we will use Stan to estimate <code>a</code> and <code>b</code> from the data.</p>
+<p>Below is the code for the Stan model. Don't worry if you can't read it; the explanation above and the comments in the code should be sufficient.</p>
+<pre class="language-python" tabindex="0"><code class="language-python">stan_model_src <span class="token operator">=</span> <span class="token triple-quoted-string string">"""
+data {                                               // this block describes the training data
+  int&lt;lower=1> n_players;                            // number of players observed
+  array[n_players] int&lt;lower=0> hits;                // number of hits - needs to be integer type because of binomial call
+  array[n_players] int&lt;lower=0> atbat;               // number of at-bats - needs to be integer type because of binomial call
+}
+parameters {                                           // this block declares the parameters to be estimated
+  vector&lt;lower=0, upper=1>[n_players] gamma;           // unobserved "true" batting abilities
+  real&lt;lower=0> a;                                     // pseudo-hits
+  real&lt;lower=0> b;                                     // pseudo-misses
+}
+model {                                             // this block describes the relations between parameters and data
+  gamma ~ beta(a, b);                               // distribution of unobservable batting ability
+  hits ~ binomial(atbat, gamma);                    // relation of hits to per-player ability
+}
+"""</span></code></pre>
+<p>Unlike most modeling systems, Stan does not return point estimates of the parameters it is trying to fit. It instead uses Monte Carlo sampling to jointly generate sets of parameters (called samples) that are consistent with the training data. Each of these samples (4000 of them, in this case) represents a &quot;possible world&quot; that could generate the observed data. We can use these possible worlds to not only calculate point estimates of the parameters we want, but also uncertainty ranges around those estimates.</p>
+<p>Behind the scenes, we have fit the model, and saved Stan's generated samples into a data frame named <code>fit_Stan</code>. For all the details, see the source code linked at the top of this article.</p>
+<pre class="language-python" tabindex="0"><code class="language-python">fit_Stan<span class="token punctuation">.</span>shape</code></pre>
+<pre><code>(4000, 668)
+</code></pre>
+<h2 id="estimate-of-the-priors">Estimate of the Priors</h2>
+<p>Let's look at Stan's estimates for <code>a</code> and <code>b</code>. Do we get reasonable distributions of pseudo-observations and global batting ability?</p>
+<p>As a diagnostic on the model, we would like to see that the distributions of both <code>a</code> and <code>b</code> are unimodal (which they are, but for brevity the plots are omitted). We'd also like to see that the mean of the beta distribution is near the observed mean batting average in every sample.</p>
+<details>
+<summary>Click to see code</summary>
+<pre class="language-python" tabindex="0"><code class="language-python"><span class="token comment">## check the a and b estimates. </span>
+
+abframe <span class="token operator">=</span> fit_Stan<span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token string">'a'</span><span class="token punctuation">,</span> <span class="token string">'b'</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">.</span>copy<span class="token punctuation">(</span><span class="token punctuation">)</span>
+abframe<span class="token punctuation">[</span><span class="token string">'pseudo_obsv'</span><span class="token punctuation">]</span> <span class="token operator">=</span> abframe<span class="token punctuation">[</span><span class="token string">'a'</span><span class="token punctuation">]</span> <span class="token operator">+</span> abframe<span class="token punctuation">[</span><span class="token string">'b'</span><span class="token punctuation">]</span>
+abframe<span class="token punctuation">[</span><span class="token string">'global_ba'</span><span class="token punctuation">]</span> <span class="token operator">=</span> abframe<span class="token punctuation">[</span><span class="token string">'a'</span><span class="token punctuation">]</span><span class="token operator">/</span>abframe<span class="token punctuation">[</span><span class="token string">'pseudo_obsv'</span><span class="token punctuation">]</span>
+abframe<span class="token punctuation">[</span><span class="token string">'variance'</span><span class="token punctuation">]</span> <span class="token operator">=</span> abframe<span class="token punctuation">[</span><span class="token string">'a'</span><span class="token punctuation">]</span><span class="token operator">*</span>abframe<span class="token punctuation">[</span><span class="token string">'b'</span><span class="token punctuation">]</span><span class="token operator">/</span><span class="token punctuation">(</span> abframe<span class="token punctuation">[</span><span class="token string">'pseudo_obsv'</span><span class="token punctuation">]</span><span class="token operator">**</span><span class="token number">2</span> <span class="token operator">*</span> <span class="token punctuation">(</span>abframe<span class="token punctuation">[</span><span class="token string">'pseudo_obsv'</span><span class="token punctuation">]</span> <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"""
+      Mean pseudo observation estimate: </span><span class="token interpolation"><span class="token punctuation">{</span>abframe<span class="token punctuation">[</span><span class="token string">'pseudo_obsv'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">; 
+      Mean global batting ability estimate: </span><span class="token interpolation"><span class="token punctuation">{</span>abframe<span class="token punctuation">[</span><span class="token string">'global_ba'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">, compared to observed mean batting average </span><span class="token interpolation"><span class="token punctuation">{</span>mean_ba<span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">
+"""</span></span><span class="token punctuation">)</span></code></pre>
+</details>
+<pre><code>
+Mean pseudo observation estimate: 434.612; 
+Mean global batting ability estimate: 0.244, compared to observed mean batting average 0.227
+
+</code></pre>
+<p><picture><source type="image/avif" srcset="/WVExamples/blog/batting-estimation-stan/baseball_stats/0JCvbzsjIA-1280.avif 1280w"><source type="image/webp" srcset="/WVExamples/blog/batting-estimation-stan/baseball_stats/0JCvbzsjIA-1280.webp 1280w"><img loading="lazy" decoding="async" src="/WVExamples/blog/batting-estimation-stan/baseball_stats/0JCvbzsjIA-1280.png" alt="Distributions of beta means and pseudo-observations from Stan estimates" width="1280" height="960"></picture></p>
+<p>The mean of <code>beta</code> is generally between 0.24 and 0.25, which is not far from the observed mean batting average of 0.23. The large number of pseudo-observations corresponds to beta distributions with fairly low variance, which is again consistent with our empirical observation. It also means that there will be a lot of smoothing on the estimates.</p>
+<h2 id="estimating-batting-ability">Estimating Batting Ability</h2>
+<p>Now let's get all the samples of player gammas.</p>
+<pre class="language-python" tabindex="0"><code class="language-python">batting_estimates <span class="token operator">=</span> fit_Stan<span class="token punctuation">.</span><span class="token builtin">filter</span><span class="token punctuation">(</span>like<span class="token operator">=</span><span class="token string">'gamma'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>copy<span class="token punctuation">(</span><span class="token punctuation">)</span>
+batting_estimates<span class="token punctuation">.</span>columns <span class="token operator">=</span> battingf<span class="token punctuation">[</span><span class="token string">'playerID'</span><span class="token punctuation">]</span>
+batting_estimates</code></pre>
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+<p>.dataframe tbody tr th {<br>
+vertical-align: top;<br>
+}</p>
+<p>.dataframe thead th {<br>
+text-align: right;<br>
+}<br>
+</style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>playerID</th>
+      <th>abramcj01</th>
+      <th>abreujo02</th>
+      <th>abreuwi02</th>
+      <th>...</th>
+      <th>youngja03</th>
+      <th>zavalse01</th>
+      <th>zuninmi01</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.255413</td>
+      <td>0.248422</td>
+      <td>0.258750</td>
+      <td>...</td>
+      <td>0.253605</td>
+      <td>0.227349</td>
+      <td>0.222809</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.244398</td>
+      <td>0.217937</td>
+      <td>0.251756</td>
+      <td>...</td>
+      <td>0.283892</td>
+      <td>0.217628</td>
+      <td>0.237123</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.243953</td>
+      <td>0.258032</td>
+      <td>0.263147</td>
+      <td>...</td>
+      <td>0.208346</td>
+      <td>0.220289</td>
+      <td>0.219931</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.249291</td>
+      <td>0.242690</td>
+      <td>0.261040</td>
+      <td>...</td>
+      <td>0.265126</td>
+      <td>0.221886</td>
+      <td>0.227214</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.237667</td>
+      <td>0.251283</td>
+      <td>0.240370</td>
+      <td>...</td>
+      <td>0.233977</td>
+      <td>0.219615</td>
+      <td>0.237419</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>3995</th>
+      <td>0.259563</td>
+      <td>0.245729</td>
+      <td>0.300755</td>
+      <td>...</td>
+      <td>0.223936</td>
+      <td>0.206689</td>
+      <td>0.249676</td>
+    </tr>
+    <tr>
+      <th>3996</th>
+      <td>0.245689</td>
+      <td>0.236702</td>
+      <td>0.238916</td>
+      <td>...</td>
+      <td>0.249938</td>
+      <td>0.214311</td>
+      <td>0.234321</td>
+    </tr>
+    <tr>
+      <th>3997</th>
+      <td>0.224689</td>
+      <td>0.227445</td>
+      <td>0.234514</td>
+      <td>...</td>
+      <td>0.274076</td>
+      <td>0.252756</td>
+      <td>0.234653</td>
+    </tr>
+    <tr>
+      <th>3998</th>
+      <td>0.228148</td>
+      <td>0.233065</td>
+      <td>0.252618</td>
+      <td>...</td>
+      <td>0.233102</td>
+      <td>0.257751</td>
+      <td>0.235676</td>
+    </tr>
+    <tr>
+      <th>3999</th>
+      <td>0.263306</td>
+      <td>0.248453</td>
+      <td>0.251055</td>
+      <td>...</td>
+      <td>0.256680</td>
+      <td>0.194360</td>
+      <td>0.225084</td>
+    </tr>
+  </tbody>
+</table>
+<p>4000 rows × 656 columns</p>
+</div>
+<p class="caption">Each row represents a combination of player batting abilities that is consistent with the training data.</p>
+<p>For every player, we can use the above set of Stan estimates to get a point estimate of their gamma (we'll use the mean; you can also use the median), and an uncertainty interval that covers 95% of the Stan estimates.</p>
+<details>
+<summary>Click to see code</summary>
+<pre class="language-python" tabindex="0"><code class="language-python">
+nplayers <span class="token operator">=</span> battingf<span class="token punctuation">.</span>shape<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span>
+means <span class="token operator">=</span> <span class="token punctuation">[</span>np<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>batting_estimates<span class="token punctuation">.</span>iloc<span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token punctuation">,</span> i<span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span>nplayers<span class="token punctuation">)</span><span class="token punctuation">]</span>
+<span class="token comment"># calculate the 95% uncertainty interval</span>
+intervals <span class="token operator">=</span> <span class="token punctuation">[</span>np<span class="token punctuation">.</span>percentile<span class="token punctuation">(</span>batting_estimates<span class="token punctuation">.</span>iloc<span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token punctuation">,</span> i<span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">2.5</span><span class="token punctuation">,</span> <span class="token number">97.5</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span>nplayers<span class="token punctuation">)</span><span class="token punctuation">]</span>
+interval_bottom <span class="token operator">=</span> <span class="token punctuation">[</span>interv<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span> <span class="token keyword">for</span> interv <span class="token keyword">in</span> intervals<span class="token punctuation">]</span>
+interval_top <span class="token operator">=</span> <span class="token punctuation">[</span>interv<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span> <span class="token keyword">for</span> interv <span class="token keyword">in</span> intervals<span class="token punctuation">]</span>
+
+battingf<span class="token punctuation">[</span><span class="token string">'gamma'</span><span class="token punctuation">]</span> <span class="token operator">=</span> means
+battingf<span class="token punctuation">[</span><span class="token string">'g_min'</span><span class="token punctuation">]</span> <span class="token operator">=</span> interval_bottom
+battingf<span class="token punctuation">[</span><span class="token string">'g_max'</span><span class="token punctuation">]</span> <span class="token operator">=</span> interval_top
+
+battingf
+</code></pre>
+</details>
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+<p>.dataframe tbody tr th {<br>
+vertical-align: top;<br>
+}</p>
+<p>.dataframe thead th {<br>
+text-align: right;<br>
+}<br>
+</style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>playerID</th>
+      <th>atbat</th>
+      <th>hits</th>
+      <th>batting_avg</th>
+      <th>gamma</th>
+      <th>g_min</th>
+      <th>g_max</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>abramcj01</td>
+      <td>563</td>
+      <td>138</td>
+      <td>0.245115</td>
+      <td>0.244644</td>
+      <td>0.217479</td>
+      <td>0.271896</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>abreujo02</td>
+      <td>540</td>
+      <td>128</td>
+      <td>0.237037</td>
+      <td>0.240080</td>
+      <td>0.212640</td>
+      <td>0.266951</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>abreuwi02</td>
+      <td>76</td>
+      <td>24</td>
+      <td>0.315789</td>
+      <td>0.254437</td>
+      <td>0.215732</td>
+      <td>0.295471</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>acunaro01</td>
+      <td>643</td>
+      <td>217</td>
+      <td>0.337481</td>
+      <td>0.300198</td>
+      <td>0.271661</td>
+      <td>0.330569</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>adamewi01</td>
+      <td>553</td>
+      <td>120</td>
+      <td>0.216998</td>
+      <td>0.228769</td>
+      <td>0.202451</td>
+      <td>0.256487</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>651</th>
+      <td>yoshima02</td>
+      <td>537</td>
+      <td>155</td>
+      <td>0.288641</td>
+      <td>0.268467</td>
+      <td>0.240529</td>
+      <td>0.297654</td>
+    </tr>
+    <tr>
+      <th>652</th>
+      <td>youngja02</td>
+      <td>43</td>
+      <td>8</td>
+      <td>0.186047</td>
+      <td>0.238932</td>
+      <td>0.201439</td>
+      <td>0.278378</td>
+    </tr>
+    <tr>
+      <th>653</th>
+      <td>youngja03</td>
+      <td>107</td>
+      <td>27</td>
+      <td>0.252336</td>
+      <td>0.245744</td>
+      <td>0.209507</td>
+      <td>0.283893</td>
+    </tr>
+    <tr>
+      <th>654</th>
+      <td>zavalse01</td>
+      <td>175</td>
+      <td>30</td>
+      <td>0.171429</td>
+      <td>0.223203</td>
+      <td>0.190155</td>
+      <td>0.258194</td>
+    </tr>
+    <tr>
+      <th>655</th>
+      <td>zuninmi01</td>
+      <td>124</td>
+      <td>22</td>
+      <td>0.177419</td>
+      <td>0.229210</td>
+      <td>0.194561</td>
+      <td>0.265152</td>
+    </tr>
+  </tbody>
+</table>
+<p>656 rows × 7 columns</p>
+</div>
+<p class="caption">Point estimates of batting abilities, along with upper and lower bounds on 95% uncertainty intervals</p>
+<h3 id="the-top-10-batters-according-to-stan">The Top 10 Batters, According to Stan</h3>
+<p>Here is the roster of top 10 batters, according to the Stan point estimates. Notice that all the players in this roster have been at bat hundreds of times, so we can consider this top 10 to be more trustworthy.</p>
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+<p>.dataframe tbody tr th {<br>
+vertical-align: top;<br>
+}</p>
+<p>.dataframe thead th {<br>
+text-align: right;<br>
+}<br>
+</style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>playerID</th>
+      <th>atbat</th>
+      <th>hits</th>
+      <th>batting_avg</th>
+      <th>gamma</th>
+      <th>g_min</th>
+      <th>g_max</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>34</th>
+      <td>arraelu01</td>
+      <td>574</td>
+      <td>203</td>
+      <td>0.353659</td>
+      <td>0.306837</td>
+      <td>0.278873</td>
+      <td>0.336221</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>acunaro01</td>
+      <td>643</td>
+      <td>217</td>
+      <td>0.337481</td>
+      <td>0.300198</td>
+      <td>0.271661</td>
+      <td>0.330569</td>
+    </tr>
+    <tr>
+      <th>200</th>
+      <td>freemfr01</td>
+      <td>637</td>
+      <td>211</td>
+      <td>0.331240</td>
+      <td>0.296087</td>
+      <td>0.268344</td>
+      <td>0.324402</td>
+    </tr>
+    <tr>
+      <th>158</th>
+      <td>diazya01</td>
+      <td>525</td>
+      <td>173</td>
+      <td>0.329524</td>
+      <td>0.291116</td>
+      <td>0.262371</td>
+      <td>0.321038</td>
+    </tr>
+    <tr>
+      <th>520</th>
+      <td>seageco01</td>
+      <td>477</td>
+      <td>156</td>
+      <td>0.327044</td>
+      <td>0.287488</td>
+      <td>0.258570</td>
+      <td>0.318180</td>
+    </tr>
+    <tr>
+      <th>61</th>
+      <td>bettsmo01</td>
+      <td>584</td>
+      <td>179</td>
+      <td>0.306507</td>
+      <td>0.280108</td>
+      <td>0.253704</td>
+      <td>0.307470</td>
+    </tr>
+    <tr>
+      <th>62</th>
+      <td>bichebo01</td>
+      <td>571</td>
+      <td>175</td>
+      <td>0.306480</td>
+      <td>0.279565</td>
+      <td>0.252326</td>
+      <td>0.307508</td>
+    </tr>
+    <tr>
+      <th>53</th>
+      <td>bellico01</td>
+      <td>499</td>
+      <td>153</td>
+      <td>0.306613</td>
+      <td>0.277572</td>
+      <td>0.249387</td>
+      <td>0.306813</td>
+    </tr>
+    <tr>
+      <th>469</th>
+      <td>ramirha02</td>
+      <td>400</td>
+      <td>125</td>
+      <td>0.312500</td>
+      <td>0.277267</td>
+      <td>0.247371</td>
+      <td>0.310371</td>
+    </tr>
+    <tr>
+      <th>410</th>
+      <td>naylojo01</td>
+      <td>452</td>
+      <td>139</td>
+      <td>0.307522</td>
+      <td>0.276918</td>
+      <td>0.247745</td>
+      <td>0.308113</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<p class="caption">The top 10 batters, as given by the Stan point estimates of batter ability</p>
+<p>Let's plot the top 10 players' <code>gamma</code>s, along with their observed batting average and the estimated global mean batting ability.</p>
+<p><picture><source type="image/avif" srcset="/WVExamples/blog/batting-estimation-stan/baseball_stats/By9M00CZL4-1280.avif 1280w"><source type="image/webp" srcset="/WVExamples/blog/batting-estimation-stan/baseball_stats/By9M00CZL4-1280.webp 1280w"><img loading="lazy" decoding="async" src="/WVExamples/blog/batting-estimation-stan/baseball_stats/By9M00CZL4-1280.png" alt="Estimated gammas, with 95% uncertainty intervals, for top 10 players" width="1280" height="960"></picture></p>
+<p class="caption">Gamma estimates for the top 10 batters. Gamma and 95% uncertainty intervals in green; observed batting averages in purple. The horizontal dashed line is the estimated mean player batting ability.</p>    
+<p>You might wonder why the observed batting averages are consistently so much higher than the estimated batting abilities. This is because the model is smoothing all the estimates towards the priors. Hence, performance estimates for high performing batters will be biased down, and performance estimates for low performing batters will be biased up. This is not a property unique to Stan; it is a property of the smoothing process.</p>
+<p>It is also worth pointing out, however, that the uncertainty intervals are away from the estimated global mean (horizontal dashed line), indicating that the model identifies these players as having above average batting ability. Furthermore, the ranking order of the players according to their <code>gamma</code> estimates is generally consistent with the ranking of their empirical batting averages.</p>
+<p>What about the players with very few at-bats? As desired, their <code>gamma</code>s are near the estimated global mean of 0.24.</p>
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+<p>.dataframe tbody tr th {<br>
+vertical-align: top;<br>
+}</p>
+<p>.dataframe thead th {<br>
+text-align: right;<br>
+}<br>
+</style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>playerID</th>
+      <th>atbat</th>
+      <th>hits</th>
+      <th>batting_avg</th>
+      <th>gamma</th>
+      <th>g_min</th>
+      <th>g_max</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>46</th>
+      <td>barretr01</td>
+      <td>2</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.243261</td>
+      <td>0.204423</td>
+      <td>0.284172</td>
+    </tr>
+    <tr>
+      <th>111</th>
+      <td>castidi02</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.243484</td>
+      <td>0.202068</td>
+      <td>0.287601</td>
+    </tr>
+    <tr>
+      <th>124</th>
+      <td>colliza01</td>
+      <td>4</td>
+      <td>2</td>
+      <td>0.5</td>
+      <td>0.246683</td>
+      <td>0.206278</td>
+      <td>0.288201</td>
+    </tr>
+    <tr>
+      <th>140</th>
+      <td>culbech01</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1.0</td>
+      <td>0.245780</td>
+      <td>0.207254</td>
+      <td>0.286393</td>
+    </tr>
+    <tr>
+      <th>165</th>
+      <td>downsje01</td>
+      <td>5</td>
+      <td>2</td>
+      <td>0.4</td>
+      <td>0.246108</td>
+      <td>0.206405</td>
+      <td>0.287695</td>
+    </tr>
+    <tr>
+      <th>205</th>
+      <td>fulmemi01</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.243642</td>
+      <td>0.205138</td>
+      <td>0.284218</td>
+    </tr>
+    <tr>
+      <th>229</th>
+      <td>graytr01</td>
+      <td>5</td>
+      <td>2</td>
+      <td>0.4</td>
+      <td>0.245800</td>
+      <td>0.205371</td>
+      <td>0.288453</td>
+    </tr>
+    <tr>
+      <th>242</th>
+      <td>hamilbi02</td>
+      <td>2</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.243317</td>
+      <td>0.205493</td>
+      <td>0.283204</td>
+    </tr>
+    <tr>
+      <th>243</th>
+      <td>hamilca01</td>
+      <td>5</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.241302</td>
+      <td>0.203104</td>
+      <td>0.282519</td>
+    </tr>
+    <tr>
+      <th>290</th>
+      <td>kaiseco01</td>
+      <td>4</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.241975</td>
+      <td>0.202445</td>
+      <td>0.282454</td>
+    </tr>
+    <tr>
+      <th>325</th>
+      <td>lopezal03</td>
+      <td>2</td>
+      <td>1</td>
+      <td>0.5</td>
+      <td>0.245427</td>
+      <td>0.205673</td>
+      <td>0.287053</td>
+    </tr>
+    <tr>
+      <th>362</th>
+      <td>mccoyma01</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.243813</td>
+      <td>0.205295</td>
+      <td>0.285935</td>
+    </tr>
+    <tr>
+      <th>386</th>
+      <td>millesh01</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.243820</td>
+      <td>0.204505</td>
+      <td>0.284791</td>
+    </tr>
+    <tr>
+      <th>388</th>
+      <td>mitchca01</td>
+      <td>4</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.241544</td>
+      <td>0.201192</td>
+      <td>0.284165</td>
+    </tr>
+    <tr>
+      <th>424</th>
+      <td>okeych01</td>
+      <td>2</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.242944</td>
+      <td>0.202513</td>
+      <td>0.285449</td>
+    </tr>
+    <tr>
+      <th>482</th>
+      <td>reynoma03</td>
+      <td>5</td>
+      <td>1</td>
+      <td>0.2</td>
+      <td>0.243430</td>
+      <td>0.204012</td>
+      <td>0.285005</td>
+    </tr>
+    <tr>
+      <th>514</th>
+      <td>sborzjo01</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.243737</td>
+      <td>0.203860</td>
+      <td>0.285506</td>
+    </tr>
+    <tr>
+      <th>521</th>
+      <td>seaglch01</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.243371</td>
+      <td>0.203613</td>
+      <td>0.285376</td>
+    </tr>
+    <tr>
+      <th>527</th>
+      <td>shewmbr01</td>
+      <td>4</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.241642</td>
+      <td>0.200795</td>
+      <td>0.284840</td>
+    </tr>
+    <tr>
+      <th>529</th>
+      <td>sianimi01</td>
+      <td>5</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.241498</td>
+      <td>0.201679</td>
+      <td>0.283838</td>
+    </tr>
+    <tr>
+      <th>614</th>
+      <td>vilorme01</td>
+      <td>3</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.242547</td>
+      <td>0.202917</td>
+      <td>0.283509</td>
+    </tr>
+    <tr>
+      <th>622</th>
+      <td>wainwad01</td>
+      <td>2</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.242655</td>
+      <td>0.203335</td>
+      <td>0.284259</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<p class="caption">Observed batting averages and estimated batting ability for players with five or fewer at-bats.</p>
+<h2 id="whos-the-best-player-another-way-to-choose">Who's the best player? Another way to choose</h2>
+<p>If our goal is in fact to choose the player(s) with the highest batting ability, there is another way to do it, using the &quot;possible worlds&quot; sampled by Stan. For each one of the 4000 possible worlds, we identify the highest ability player. The &quot;true&quot; best player is most likely the one who is best in the most possible worlds.</p>
+<p>Below, we find the best player in every Stan sample, and pick our top 10 accordingly. We could of course pick the top 10 in each possible world, and draw our &quot;most likely top 10&quot; from the resulting sets, but picking the single best is easier to code, and gets the point across.</p>
+<details>
+<summary>Click to see code</summary>
+<pre class="language-python" tabindex="0"><code class="language-python"><span class="token comment"># get the best performance in each sample world</span>
+best_perf <span class="token operator">=</span> batting_estimates<span class="token punctuation">.</span><span class="token builtin">max</span><span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+
+<span class="token comment"># mark which player was the best in each world. ties ok</span>
+is_best <span class="token operator">=</span> batting_estimates<span class="token punctuation">.</span>eq<span class="token punctuation">(</span>best_perf<span class="token punctuation">,</span> axis<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">.</span>astype<span class="token punctuation">(</span><span class="token builtin">int</span><span class="token punctuation">)</span> 
+
+<span class="token comment"># compute the series and convert it to a data frame</span>
+mean_best <span class="token operator">=</span> is_best<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>reset_index<span class="token punctuation">(</span><span class="token punctuation">)</span> 
+mean_best<span class="token punctuation">.</span>columns <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string">'playerID'</span><span class="token punctuation">,</span> <span class="token string">'frac_as_best'</span><span class="token punctuation">]</span>
+
+<span class="token comment"># join it into battingf</span>
+battingf <span class="token operator">=</span> battingf<span class="token punctuation">.</span>merge<span class="token punctuation">(</span>mean_best<span class="token punctuation">,</span> on<span class="token operator">=</span><span class="token string">'playerID'</span><span class="token punctuation">)</span>
+
+<span class="token comment"># top 10 by fraction best</span>
+top10_by_frac <span class="token operator">=</span> battingf<span class="token punctuation">.</span>nlargest<span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">,</span> <span class="token string">'frac_as_best'</span><span class="token punctuation">)</span>
+top10_by_frac<span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token string">'playerID'</span><span class="token punctuation">,</span> <span class="token string">'frac_as_best'</span><span class="token punctuation">,</span> <span class="token string">'batting_avg'</span><span class="token punctuation">,</span> <span class="token string">'gamma'</span><span class="token punctuation">]</span><span class="token punctuation">]</span></code></pre>
+</details>
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+<p>.dataframe tbody tr th {<br>
+vertical-align: top;<br>
+}</p>
+<p>.dataframe thead th {<br>
+text-align: right;<br>
+}<br>
+</style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>playerID</th>
+      <th>frac_as_best</th>
+      <th>batting_avg</th>
+      <th>gamma</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>34</th>
+      <td>arraelu01</td>
+      <td>0.33250</td>
+      <td>0.353659</td>
+      <td>0.306837</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>acunaro01</td>
+      <td>0.18100</td>
+      <td>0.337481</td>
+      <td>0.300198</td>
+    </tr>
+    <tr>
+      <th>200</th>
+      <td>freemfr01</td>
+      <td>0.11000</td>
+      <td>0.331240</td>
+      <td>0.296087</td>
+    </tr>
+    <tr>
+      <th>158</th>
+      <td>diazya01</td>
+      <td>0.06425</td>
+      <td>0.329524</td>
+      <td>0.291116</td>
+    </tr>
+    <tr>
+      <th>520</th>
+      <td>seageco01</td>
+      <td>0.04150</td>
+      <td>0.327044</td>
+      <td>0.287488</td>
+    </tr>
+    <tr>
+      <th>469</th>
+      <td>ramirha02</td>
+      <td>0.01650</td>
+      <td>0.312500</td>
+      <td>0.277267</td>
+    </tr>
+    <tr>
+      <th>62</th>
+      <td>bichebo01</td>
+      <td>0.01250</td>
+      <td>0.306480</td>
+      <td>0.279565</td>
+    </tr>
+    <tr>
+      <th>410</th>
+      <td>naylojo01</td>
+      <td>0.01075</td>
+      <td>0.307522</td>
+      <td>0.276918</td>
+    </tr>
+    <tr>
+      <th>61</th>
+      <td>bettsmo01</td>
+      <td>0.01050</td>
+      <td>0.306507</td>
+      <td>0.280108</td>
+    </tr>
+    <tr>
+      <th>53</th>
+      <td>bellico01</td>
+      <td>0.00975</td>
+      <td>0.306613</td>
+      <td>0.277572</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<p class="caption">Too 10 batters, calculated by how often each player ranked best in a Stan sample.</p>
+<p>This is substantially the same set of players as were selected by looking just at the point estimates. That's good! It gives us confidence that these are indeed the players with the highest batting ability.</p>
+<p>Let's mark the players who show up in the top 10, by either criterion. We'll also check for differences in the two top 10 sets.</p>
+<details>
+<summary>Click to see code</summary>
+<pre class="language-python" tabindex="0"><code class="language-python">top10_by_frac <span class="token operator">=</span> <span class="token builtin">set</span><span class="token punctuation">(</span>battingf<span class="token punctuation">.</span>nlargest<span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">,</span> <span class="token string">'frac_as_best'</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token string">'playerID'</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+top10_by_gamma <span class="token operator">=</span> <span class="token builtin">set</span><span class="token punctuation">(</span>battingf<span class="token punctuation">.</span>nlargest<span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">,</span> <span class="token string">'gamma'</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token string">'playerID'</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+<span class="token comment"># take a look at the differences in the sets</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f'Picked by point estimate but not by fraction best: </span><span class="token interpolation"><span class="token punctuation">{</span> top10_by_gamma<span class="token punctuation">.</span>difference<span class="token punctuation">(</span>top10_by_frac<span class="token punctuation">)</span> <span class="token punctuation">}</span></span><span class="token string">'</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f'Picked by fraction best but not by point estimate: </span><span class="token interpolation"><span class="token punctuation">{</span> top10_by_frac<span class="token punctuation">.</span>difference<span class="token punctuation">(</span>top10_by_gamma<span class="token punctuation">)</span> <span class="token punctuation">}</span></span><span class="token string">'</span></span><span class="token punctuation">)</span>
+
+in_top10_set <span class="token operator">=</span>  top10_by_gamma<span class="token punctuation">.</span>union<span class="token punctuation">(</span>top10_by_frac<span class="token punctuation">)</span>
+in_top10 <span class="token operator">=</span> battingf<span class="token punctuation">[</span><span class="token string">'playerID'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>isin<span class="token punctuation">(</span>in_top10_set<span class="token punctuation">)</span>
+
+battingf<span class="token punctuation">[</span><span class="token string">'in_top10'</span><span class="token punctuation">]</span> <span class="token operator">=</span> in_top10<span class="token punctuation">.</span>astype<span class="token punctuation">(</span><span class="token builtin">str</span><span class="token punctuation">)</span>
+battingf<span class="token punctuation">.</span>loc<span class="token punctuation">[</span>battingf<span class="token punctuation">[</span><span class="token string">'in_top10'</span><span class="token punctuation">]</span><span class="token operator">==</span><span class="token string">'True'</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token string">'playerID'</span><span class="token punctuation">,</span> <span class="token string">'atbat'</span><span class="token punctuation">,</span> <span class="token string">'hits'</span><span class="token punctuation">,</span> <span class="token string">'batting_avg'</span><span class="token punctuation">,</span> <span class="token string">'gamma'</span><span class="token punctuation">,</span> <span class="token string">'frac_as_best'</span><span class="token punctuation">]</span><span class="token punctuation">]</span></code></pre>
+</details>
+<pre><code>    Picked by point estimate but not by fraction best: set()
+    Picked by fraction best but not by point estimate: set()
+</code></pre>
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+<p>.dataframe tbody tr th {<br>
+vertical-align: top;<br>
+}</p>
+<p>.dataframe thead th {<br>
+text-align: right;<br>
+}<br>
+</style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>playerID</th>
+      <th>atbat</th>
+      <th>hits</th>
+      <th>batting_avg</th>
+      <th>gamma</th>
+      <th>frac_as_best</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>3</th>
+      <td>acunaro01</td>
+      <td>643</td>
+      <td>217</td>
+      <td>0.337481</td>
+      <td>0.300198</td>
+      <td>0.18100</td>
+    </tr>
+    <tr>
+      <th>34</th>
+      <td>arraelu01</td>
+      <td>574</td>
+      <td>203</td>
+      <td>0.353659</td>
+      <td>0.306837</td>
+      <td>0.33250</td>
+    </tr>
+    <tr>
+      <th>53</th>
+      <td>bellico01</td>
+      <td>499</td>
+      <td>153</td>
+      <td>0.306613</td>
+      <td>0.277572</td>
+      <td>0.00975</td>
+    </tr>
+    <tr>
+      <th>61</th>
+      <td>bettsmo01</td>
+      <td>584</td>
+      <td>179</td>
+      <td>0.306507</td>
+      <td>0.280108</td>
+      <td>0.01050</td>
+    </tr>
+    <tr>
+      <th>62</th>
+      <td>bichebo01</td>
+      <td>571</td>
+      <td>175</td>
+      <td>0.306480</td>
+      <td>0.279565</td>
+      <td>0.01250</td>
+    </tr>
+    <tr>
+      <th>158</th>
+      <td>diazya01</td>
+      <td>525</td>
+      <td>173</td>
+      <td>0.329524</td>
+      <td>0.291116</td>
+      <td>0.06425</td>
+    </tr>
+    <tr>
+      <th>200</th>
+      <td>freemfr01</td>
+      <td>637</td>
+      <td>211</td>
+      <td>0.331240</td>
+      <td>0.296087</td>
+      <td>0.11000</td>
+    </tr>
+    <tr>
+      <th>410</th>
+      <td>naylojo01</td>
+      <td>452</td>
+      <td>139</td>
+      <td>0.307522</td>
+      <td>0.276918</td>
+      <td>0.01075</td>
+    </tr>
+    <tr>
+      <th>469</th>
+      <td>ramirha02</td>
+      <td>400</td>
+      <td>125</td>
+      <td>0.312500</td>
+      <td>0.277267</td>
+      <td>0.01650</td>
+    </tr>
+    <tr>
+      <th>520</th>
+      <td>seageco01</td>
+      <td>477</td>
+      <td>156</td>
+      <td>0.327044</td>
+      <td>0.287488</td>
+      <td>0.04150</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<p class="caption">Players marked as belonging to top 10 by either ranking criterion.</p>
+<h3 id="comparing-the-naive-ranking-to-stans-ranking">Comparing the Naive Ranking to Stan's Ranking</h3>
+<p>Now let's plot all the players, sorted by observed batting average (lowest to highest). We'll plot the estimated player ability (<code>gamma</code>), along with the 95% uncertainty intervals around the estimates (in light gray). The points are also color coded by whether or not the player made at least one of the top 10 lists (in green) or not (in purple). The dashed line is the estimated mean player ability.</p>
+<p><picture><source type="image/avif" srcset="/WVExamples/blog/batting-estimation-stan/baseball_stats/bA3goBqvLM-2400.avif 2400w"><source type="image/webp" srcset="/WVExamples/blog/batting-estimation-stan/baseball_stats/bA3goBqvLM-2400.webp 2400w"><img loading="lazy" decoding="async" src="/WVExamples/blog/batting-estimation-stan/baseball_stats/bA3goBqvLM-2400.png" alt="Estimated player abilities and 95% uncertainty intervals. Players sorted by observed batting average (lowest to highest)" width="2400" height="1600"></picture></p>
+<p class="caption">Estimated player abilities, with players sorted by observed batting average (lowest to highest). Green points indicate top 10 batters. 95% uncertainty intervals on ability estimates shown in gray. Dashed line represents estimated mean player ability. Right click on image to get full size version.</p>
+<p>There are a few things to note in this graph. First, the ranking of ability estimates roughly correlate with the ranking of observed batting averages, as desired. There is a cluster of purple players to the right of the green players who have relatively low (actually, average) estimated batting ability, but high observed batting average. These are the players who weren't at bat very often, but who were successful when they were. The model did not have enough data on these players to move the ability estimates away from the prior. Similarly, there are players at the far left of the graph who cluster around the mean, even though their observed batting averages are zero, or nearly so. These are also players with only a few at bats, so their estimated abilities still smooth strongly into the prior.</p>
+<p>So if the goal of estimating player ability is to identify the best players, then this model has been able to do so. It automatically discounts spurious empirical estimates that are likely inaccurate due to insufficient data, without the analyst having to specify what &quot;insufficient data&quot; is in an ad-hoc way. It also provides reasonable assumptions about the abilities of low information (low at-bat) players---assumptions that are based on the population data.</p>
+<h2 id="comparing-the-model-to-reality">Comparing the Model to Reality</h2>
+<p>Here are the three players who were most often ranked best in a Stan sample.</p>
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+<p>.dataframe tbody tr th {<br>
+vertical-align: top;<br>
+}</p>
+<p>.dataframe thead th {<br>
+text-align: right;<br>
+}<br>
+</style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>playerID</th>
+      <th>frac_as_best</th>
+      <th>batting_avg</th>
+      <th>gamma</th>
+      <th>career batting average</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>34</th>
+      <td>arraelu01</td>
+      <td>0.3325</td>
+      <td>0.353659</td>
+      <td>0.306837</td>
+      <td>0.317</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>acunaro01</td>
+      <td>0.1810</td>
+      <td>0.337481</td>
+      <td>0.300198</td>
+      <td>0.288</td>
+    </tr>
+    <tr>
+      <th>200</th>
+      <td>freemfr01</td>
+      <td>0.1100</td>
+      <td>0.331240</td>
+      <td>0.296087</td>
+      <td>0.299</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<p class="caption">Top Three Players, probability of being best player, observed 2023 batting average, estimated batting ability, and career batting average as of May 2026.</p>
+<p>The top player, <code>arraelu01</code>, is best-ranked by both &quot;probability of being best&quot; and point estimate criteria. He is Venezuelan-born infielder, Luis Arráez. Here's what his <a href="https://en.wikipedia.org/wiki/Luis_Arr%C3%A1ez">Wikipedia page</a> has to say about him:</p>
+<blockquote>
+<p>Known for his ability to put the ball in play and not striking out, Arráez is considered one of the best contact hitters of his generation. From 2022 to 2024, Arráez became the first player in MLB history to win three consecutive batting titles with three different teams.... He was also the second player in the modern era to win a batting title in each league and the first to do so in consecutive years.</p>
+</blockquote>
+<p>Note that his career MLB batting average<sup class="footnote-ref"><a href="#fn3" id="fnref3">[3]</a></sup> (calculated from 2019 through May 17, 2026) is 0.317. This is pretty close to our estimated <code>gamma</code> of 0.307. In fact, our estimate is a better prediction of Arráez's career performance (so far) than the simple observation of his 2023 season batting average is---even though we estimated his ability using only this single season!</p>
+<p>The next two players (as ranked by probability of being best) are Ronald Acuña, Jr. and Freddie Freeman. Note that for all these players, both Stan's batting ability estimate and player career batting average are below their observed 2023 season batting averages---showing that smoothing performance estimates to the population mean was a reasonable modeling choice. Note also that the career batting averages for these top three players also fell within the 95% uncertainty intervals of ability, as estimated by Stan.</p>
+<h2 id="matching-summaries">Matching Summaries</h2>
+<p>Let's further compare Stan's batting ability estimates with observations from the data.</p>
+<details>
+<summary>Click to see code</summary>
+<pre class="language-python" tabindex="0"><code class="language-python">mean_ability <span class="token operator">=</span> battingf<span class="token punctuation">[</span><span class="token string">'gamma'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span>
+std_ability <span class="token operator">=</span> battingf<span class="token punctuation">[</span><span class="token string">'gamma'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>std<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f'Mean observed batting average: </span><span class="token interpolation"><span class="token punctuation">{</span>mean_ba<span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">, standard deviation </span><span class="token interpolation"><span class="token punctuation">{</span>std_ba<span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">.'</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f'Mean estimated batting ability: </span><span class="token interpolation"><span class="token punctuation">{</span>mean_ability<span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">, standard deviation </span><span class="token interpolation"><span class="token punctuation">{</span>std_ability<span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">.'</span></span><span class="token punctuation">)</span></code></pre>
+</details>
+<pre><code>Mean observed batting average: 0.227, standard deviation 0.075.
+Mean estimated batting ability: 0.244, standard deviation 0.012.
+</code></pre>
+<p>As we saw previously, Stan's estimated mean batter ability is close to what was observed in the data, but the standard deviation of the ability estimates is much lower!</p>
+<p>This is not surprising: we also know that the number of player at-bats varied widely, and players with few at-bats will have observed batting averages that will tend to over- or under- estimate their actual abilities. This is why <strong>observed batting average standard deviation is so much higher than estimated batting ability standard deviation</strong>.</p>
+<p>In order to properly compare Stan's ability estimates to actual observations, we have to simulate the season in each Stan sample. That is, in each possible world, we give each player the same number of at-bats as they had in 2023, and generate a plausible observed batting average, given that number of at-bats. This is shown below.</p>
+<details>
+<summary>Click to see code</summary>
+<pre class="language-python" tabindex="0"><code class="language-python"><span class="token keyword">def</span> <span class="token function">draw_synthetic_hitrate</span> <span class="token punctuation">(</span>atbat<span class="token punctuation">,</span> bavec<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">return</span> rng<span class="token punctuation">.</span>binomial<span class="token punctuation">(</span>atbat<span class="token punctuation">,</span> bavec<span class="token punctuation">)</span><span class="token operator">/</span>atbat
+
+synthetic_hitrate_frame <span class="token operator">=</span> pd<span class="token punctuation">.</span>DataFrame<span class="token punctuation">(</span><span class="token punctuation">{</span>
+    col<span class="token punctuation">:</span> draw_synthetic_hitrate<span class="token punctuation">(</span>battingf<span class="token punctuation">[</span><span class="token string">'atbat'</span><span class="token punctuation">]</span><span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">,</span> batting_estimates<span class="token punctuation">[</span>col<span class="token punctuation">]</span><span class="token punctuation">)</span>
+    <span class="token keyword">for</span> i<span class="token punctuation">,</span> col <span class="token keyword">in</span> <span class="token builtin">enumerate</span><span class="token punctuation">(</span>batting_estimates<span class="token punctuation">.</span>columns<span class="token punctuation">)</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span>
+
+synthetic_hitrate_frame</code></pre>
+</details>
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+<p>.dataframe tbody tr th {<br>
+vertical-align: top;<br>
+}</p>
+<p>.dataframe thead th {<br>
+text-align: right;<br>
+}<br>
+</style><p></p>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>abramcj01</th>
+      <th>abreujo02</th>
+      <th>abreuwi02</th>
+      <th>...</th>
+      <th>youngja03</th>
+      <th>zavalse01</th>
+      <th>zuninmi01</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.243339</td>
+      <td>0.246296</td>
+      <td>0.381579</td>
+      <td>...</td>
+      <td>0.177570</td>
+      <td>0.245714</td>
+      <td>0.250000</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.257549</td>
+      <td>0.209259</td>
+      <td>0.368421</td>
+      <td>...</td>
+      <td>0.261682</td>
+      <td>0.228571</td>
+      <td>0.169355</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.238011</td>
+      <td>0.262963</td>
+      <td>0.210526</td>
+      <td>...</td>
+      <td>0.224299</td>
+      <td>0.200000</td>
+      <td>0.266129</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.282416</td>
+      <td>0.253704</td>
+      <td>0.276316</td>
+      <td>...</td>
+      <td>0.214953</td>
+      <td>0.291429</td>
+      <td>0.225806</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.218472</td>
+      <td>0.237037</td>
+      <td>0.236842</td>
+      <td>...</td>
+      <td>0.214953</td>
+      <td>0.211429</td>
+      <td>0.209677</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>3995</th>
+      <td>0.289520</td>
+      <td>0.227778</td>
+      <td>0.421053</td>
+      <td>...</td>
+      <td>0.224299</td>
+      <td>0.234286</td>
+      <td>0.241935</td>
+    </tr>
+    <tr>
+      <th>3996</th>
+      <td>0.253996</td>
+      <td>0.229630</td>
+      <td>0.381579</td>
+      <td>...</td>
+      <td>0.233645</td>
+      <td>0.217143</td>
+      <td>0.225806</td>
+    </tr>
+    <tr>
+      <th>3997</th>
+      <td>0.236234</td>
+      <td>0.216667</td>
+      <td>0.250000</td>
+      <td>...</td>
+      <td>0.252336</td>
+      <td>0.188571</td>
+      <td>0.241935</td>
+    </tr>
+    <tr>
+      <th>3998</th>
+      <td>0.275311</td>
+      <td>0.251852</td>
+      <td>0.236842</td>
+      <td>...</td>
+      <td>0.196262</td>
+      <td>0.360000</td>
+      <td>0.266129</td>
+    </tr>
+    <tr>
+      <th>3999</th>
+      <td>0.291297</td>
+      <td>0.244444</td>
+      <td>0.263158</td>
+      <td>...</td>
+      <td>0.271028</td>
+      <td>0.165714</td>
+      <td>0.250000</td>
+    </tr>
+  </tbody>
+</table>
+<p>4000 rows × 656 columns</p>
+</div>
+<p class="caption">Each row represents synthetic batting statistics for the 2023 season, given each player's hypothesized batting ability in that "possible world." Eash player's at-bats is the same as in the actual 2023 season.</p>
+<p>From these synthetic replays of 2023, we can estimate plausible means and standard deviations of observed batting average.</p>
+<details>
+<summary>Click to see code</summary>
+<pre class="language-python" tabindex="0"><code class="language-python"><span class="token comment"># get the mean and standard devation on ability for each sample world</span>
+mean_synth_vec <span class="token operator">=</span> synthetic_hitrate_frame<span class="token punctuation">.</span>mean<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+std_synth_vec <span class="token operator">=</span> synthetic_hitrate_frame<span class="token punctuation">.</span>std<span class="token punctuation">(</span>axis<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+
+<span class="token comment"># get the average mean and standard deviation over all sample worlds.</span>
+mean_synth <span class="token operator">=</span> mean_synth_vec<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span>
+std_synth <span class="token operator">=</span> std_synth_vec<span class="token punctuation">.</span>mean<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f'Mean observed batting average: </span><span class="token interpolation"><span class="token punctuation">{</span>mean_ba<span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">, standard deviation </span><span class="token interpolation"><span class="token punctuation">{</span>std_ba<span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">.'</span></span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f'Mean synthetic batting average observations: </span><span class="token interpolation"><span class="token punctuation">{</span>mean_synth<span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">, standard deviation </span><span class="token interpolation"><span class="token punctuation">{</span>std_synth<span class="token punctuation">:</span><span class="token format-spec">.3f</span><span class="token punctuation">}</span></span><span class="token string">.'</span></span><span class="token punctuation">)</span>
+</code></pre>
+</details>
+<pre><code>Mean observed batting average: 0.227, standard deviation 0.075.
+Mean synthetic batting average observations: 0.244, standard deviation 0.078.
+</code></pre>
+<p>This is much closer to what was actually observed! We can also plot the distribution of batting average standard deviations in each synthetic season, and compare them to the actual observed batting average standard deviaion.</p>
+<p><picture><source type="image/avif" srcset="/WVExamples/blog/batting-estimation-stan/baseball_stats/_meRLXpiVB-1280.avif 1280w"><source type="image/webp" srcset="/WVExamples/blog/batting-estimation-stan/baseball_stats/_meRLXpiVB-1280.webp 1280w"><img loading="lazy" decoding="async" src="/WVExamples/blog/batting-estimation-stan/baseball_stats/_meRLXpiVB-1280.png" alt="Distribution of synthetic standard deviations" width="1280" height="960"></picture></p>
+<p class="caption">The distribution of batting-average standard deviations, with their mean, in dark blue. The gray dashed line is the actual batting-average standard deviation.</p>
+<p>Once we simulate the at-bats, the behaviors in the synthetic worlds are consistent with what was observed in the actual data: observed batting averages vary more widely than innate batting abilities. This also gives us confidence that our model is a reasonable approximation of the real world baseball hit generation process. Specifically, it's an approximation we can use to answer the questions we want to ask, like &quot;who are the best batters?&quot;.</p>
+<h2 id="estimate-what-you-want-to-know-not-just-what-you-can-observe">Estimate What You Want to Know, Not Just What You Can Observe</h2>
+<p>As we've seen in the above example, an advantage of probabilistic modeling is that the analyst is able to distinguish between <em>observations</em> and (potentially unobservable) <em>quantities of interest</em>. If you, the analyst, can describe a probabilistic process that relates <strong><em>what you can see</em></strong> to <strong><em>what you actually need to know</em></strong>, then probabilistic modeling programs like Stan can estimate these quantities for you.</p>
+<p>By specifying the process to describe your problem and your task goal, you can add in prior knowledge or assumptions about the domain in a principled, documentable way, without having to resort to ad-hoc tweaks or data processing.</p>
+<p>In addition, probabilistic modeling systems that are based on Monte Carlo sampling (like Stan) provide samples of &quot;possible worlds&quot; that are consistent with the training data. You can use these samples not only to calculate point estimates of quantities of interest, but also uncertainty intervals around those estimates. You can also use the possible worlds to run simulations and scenarios (like, &quot;who are the top 10 players in each possible world?&quot;) to further help you in decision-making.</p>
+<p>Of course, the estimates can only be as good as the process that you describe. But as your understanding of and intuitions about these processes improve, then so, too, can your model.</p>
+<hr class="footnotes-sep">
+<section class="footnotes">
+<ol class="footnotes-list">
+<li id="fn1" class="footnote-item"><p>By <em>innate</em>, I don't mean some kind of &quot;natural-born&quot; ability; a player's batting ability is no doubt honed by training and practice. I merely use the word <em>innate</em> to emphasize that the probability of a given player making a hit is not necessarily the same as the <em>observed</em> rate at which they made hits during a season.<br> <a href="#fnref1" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn2" class="footnote-item"><p>Data from the <a href="https://sabr.org/lahman-database/">Lahman Baseball Database</a>, currently available from the Society for American Baseball Research (SABR). The <a href="https://cdalzell.github.io/Lahman/">Lahman R package</a> provides an R interface to the database, as well.<br> <a href="#fnref2" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn3" class="footnote-item"><p>All career batting averages as given by Wikipedia on May 19, 2026.<br> <a href="#fnref3" class="footnote-backref">↩︎</a></p>
+</li>
+</ol>
+</section>
+
+<ul class="links-nextprev"><li class="links-nextprev-prev">← Previous<br> <a href="/WVExamples/blog/opt-overfit/opt_example/">Save Your Optimization Project From Overestimation Bias</a></li>
+</ul>
+
+			</heading-anchors>
+		</main>
+		<hr>
+		<footer>
+			<p>&copy; 2026 <a href="https://win-vector.com/">Win Vector LLC</a></p>
+		</footer>
+
+		<!-- This page `/blog/batting-estimation-stan/baseball_stats/` was built on 2026-05-21T01:11:50.163Z -->
+		<script type="module" src="/WVExamples/dist/rJ3_G-2ArF.js"></script>
+	</body>
+</html>

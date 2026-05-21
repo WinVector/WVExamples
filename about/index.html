@@ -27,6 +27,8 @@
 	--text-color-link-active: #5f2b48;
 	--text-color-link-visited: #17050F;
 
+	--caption-color: #878580;
+
 	--syntax-tab-size: 2;
 }
 
@@ -102,6 +104,13 @@ p:last-child {
 p {
 	line-height: 1.5;
 }
+
+p.caption {
+	text-align: center;
+	font-style: italic;
+	font-size: 0.9em;
+	color: var(--caption-color);
+ }
 
 li {
 	line-height: 1.5;
@@ -207,6 +216,12 @@ header {
 .home-link:link:not(:hover) {
 	text-decoration: none;
 }
+
+/* for collapsible text blocks */
+
+details {  margin: 1em 0;  padding: 1em;  background-color: #f5f5f5;  border-left: 4px solid #0066cc;}
+summary {  cursor: pointer;  font-weight: bold;  color: #0066cc;}
+summary:hover {  text-decoration: underline;}
 
 /* Nav */
 .nav {
@@ -330,10 +345,10 @@ header {
 		</main>
 		<hr>
 		<footer>
-			<p>&copy; 2025 <a href="https://win-vector.com/">Win Vector LLC</a></p>
+			<p>&copy; 2026 <a href="https://win-vector.com/">Win Vector LLC</a></p>
 		</footer>
 
-		<!-- This page `/about/` was built on 2025-09-05T01:27:36.682Z -->
+		<!-- This page `/about/` was built on 2026-05-21T01:11:50.164Z -->
 		<script type="module" src="/WVExamples/dist/rJ3_G-2ArF.js"></script>
 	</body>
 </html>

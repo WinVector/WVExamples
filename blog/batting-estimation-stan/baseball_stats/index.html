@@ -764,7 +764,7 @@ text-align: right;<br>
 </table>
 </div>
 <p>Do you trust this ranking? Probably not---notice that most of the players in the top ten using this naive measure have actually been at bat very few times, and their batting averages are unrealistically high. Remember: the average batting average in the league for this season is 0.23, and the standard deviation is small. Batting averages of 1.0 or even 0.5 are highly improbable estimates of actual player ability.</p>
-<p>This is analogous to sorting the rankings of a product on an online shopping site. Which assessment would you consider more reliable:</p>
+<p>This is analogous to sorting the rankings of a product on an online shopping site<sup class="footnote-ref"><a href="#fn3" id="fnref3">[3]</a></sup>. Which assessment would you consider more reliable:</p>
 <ul>
 <li>one with a five-star average rating calculated from only one or two ratings,</li>
 <li>or one with a 4.5 star rating calculated from 200 ratings?</li>
@@ -791,8 +791,7 @@ text-align: right;<br>
 <pre><code>      gamma ~ beta(a, b)
 </code></pre>
 <p>In Bayesian parlance, the distribution <code>beta(a, b)</code> represents the <em>priors</em> on <code>gamma</code> (player batting ability). For a player with only a few at-bats, there is little information on their individual ability, so the model will estimate that their batting ability is near some average batting ability. For players with many at-bats, the model will have enough information to pull the estimate away from the grand mean.</p>
-<p>Intuitively, the  parameters <code>a</code> and <code>b</code> represent <code>a</code> &quot;pseudo-hits&quot; for <code>a+b</code> &quot;pseudo-atbats&quot;. The larger <code>a+b</code> is, the more observations will be required to pull a player's estimated ability away from the<br>
-grand mean (<code>a/(a+b)</code>). In other words, this formulation smooths all the estimated batting averages towards some (estimated) grand mean. The quantity <code>a+b</code> specifies the strength of the smoothing.</p>
+<p>Intuitively, the  parameters <code>a</code> and <code>b</code> represent <code>a</code> &quot;pseudo-hits&quot; for <code>a+b</code> &quot;pseudo-atbats&quot;. The larger <code>a+b</code> is, the more observations will be required to pull a player's estimated ability away from the grand mean (<code>a/(a+b)</code>). In other words, this formulation smooths all the estimated batting averages towards some (estimated) grand mean. The quantity <code>a+b</code> specifies the strength of the smoothing.</p>
 <p>We can control how much we smooth to the mean, and what the mean is, by explicitly picking <code>a</code> and <code>b</code>. In this model, however, we will use Stan to estimate <code>a</code> and <code>b</code> from the data.</p>
 <p>Below is the code for the Stan model. Don't worry if you can't read it; the explanation above and the comments in the code should be sufficient.</p>
 <pre class="language-python" tabindex="0"><code class="language-python">stan_model_src <span class="token operator">=</span> <span class="token triple-quoted-string string">"""
@@ -840,6 +839,7 @@ Mean global batting ability estimate: 0.244, compared to observed mean batting a
 </code></pre>
 <p><picture><source type="image/avif" srcset="/WVExamples/blog/batting-estimation-stan/baseball_stats/0JCvbzsjIA-1280.avif 1280w"><source type="image/webp" srcset="/WVExamples/blog/batting-estimation-stan/baseball_stats/0JCvbzsjIA-1280.webp 1280w"><img loading="lazy" decoding="async" src="/WVExamples/blog/batting-estimation-stan/baseball_stats/0JCvbzsjIA-1280.png" alt="Distributions of beta means and pseudo-observations from Stan estimates" width="1280" height="960"></picture></p>
 <p>The mean of <code>beta</code> is generally between 0.24 and 0.25, which is not far from the observed mean batting average of 0.23. The large number of pseudo-observations corresponds to beta distributions with fairly low variance, which is again consistent with our empirical observation. It also means that there will be a lot of smoothing on the estimates.</p>
+<p>As a sidenote, it is often common practice to add tight priors to <code>a</code> and <code>b</code>---that is, to force <code>a+b</code> to be small. This is both to keep the priors &quot;uninformative,&quot; as in frequentist formulations, and to force the probability estimates to be close to the empirical observations. As we will see later in this article, allowing Stan to pick <code>a</code> and <code>b</code> such that <code>a+b</code> is large, reduced the variance on ability estimates, but in a way that is consistent with the real-world batting performances. Less smoothing on the estimates would have led to too much variance in batting performance.</p>
 <h2 id="estimating-batting-ability">Estimating Batting Ability</h2>
 <p>Now let's get all the samples of player gammas.</p>
 <pre class="language-python" tabindex="0"><code class="language-python">batting_estimates <span class="token operator">=</span> fit_Stan<span class="token punctuation">.</span><span class="token builtin">filter</span><span class="token punctuation">(</span>like<span class="token operator">=</span><span class="token string">'gamma'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>copy<span class="token punctuation">(</span><span class="token punctuation">)</span>
@@ -1855,7 +1855,7 @@ text-align: right;<br>
 <blockquote>
 <p>Known for his ability to put the ball in play and not striking out, Arráez is considered one of the best contact hitters of his generation. From 2022 to 2024, Arráez became the first player in MLB history to win three consecutive batting titles with three different teams.... He was also the second player in the modern era to win a batting title in each league and the first to do so in consecutive years.</p>
 </blockquote>
-<p>Note that his career MLB batting average<sup class="footnote-ref"><a href="#fn3" id="fnref3">[3]</a></sup> (calculated from 2019 through May 17, 2026) is 0.317. This is pretty close to our estimated <code>gamma</code> of 0.307. In fact, our estimate is a better prediction of Arráez's career performance (so far) than the simple observation of his 2023 season batting average is---even though we estimated his ability using only this single season!</p>
+<p>Note that his career MLB batting average<sup class="footnote-ref"><a href="#fn4" id="fnref4">[4]</a></sup> (calculated from 2019 through May 17, 2026) is 0.317. This is pretty close to our estimated <code>gamma</code> of 0.307. In fact, our estimate is a better prediction of Arráez's career performance (so far) than the simple observation of his 2023 season batting average is---even though we estimated his ability using only this single season!</p>
 <p>The next two players (as ranked by probability of being best) are Ronald Acuña, Jr. and Freddie Freeman. Note that for all these players, both Stan's batting ability estimate and player career batting average are below their observed 2023 season batting averages---showing that smoothing performance estimates to the population mean was a reasonable modeling choice. Note also that the career batting averages for these top three players also fell within the 95% uncertainty intervals of ability, as estimated by Stan.</p>
 <h2 id="matching-summaries">Matching Summaries</h2>
 <p>Let's further compare Stan's batting ability estimates with observations from the data.</p>
@@ -2060,7 +2060,9 @@ Mean synthetic batting average observations: 0.244, standard deviation 0.078.
 </li>
 <li id="fn2" class="footnote-item"><p>Data from the <a href="https://sabr.org/lahman-database/">Lahman Baseball Database</a>, currently available from the Society for American Baseball Research (SABR). The <a href="https://cdalzell.github.io/Lahman/">Lahman R package</a> provides an R interface to the database, as well.<br> <a href="#fnref2" class="footnote-backref">↩︎</a></p>
 </li>
-<li id="fn3" class="footnote-item"><p>All career batting averages as given by Wikipedia on May 19, 2026.<br> <a href="#fnref3" class="footnote-backref">↩︎</a></p>
+<li id="fn3" class="footnote-item"><p>See Evan Miller's article <a href="https://www.evanmiller.org/how-not-to-sort-by-average-rating.html">How Not To Sort By Average Rating</a> for an alternative, frequentist solution to the  &quot;sort by rating&quot; problem, in the context of product reviews.<br> <a href="#fnref3" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn4" class="footnote-item"><p>All career batting averages as given by Wikipedia on May 19, 2026.<br> <a href="#fnref4" class="footnote-backref">↩︎</a></p>
 </li>
 </ol>
 </section>
@@ -2075,7 +2077,7 @@ Mean synthetic batting average observations: 0.244, standard deviation 0.078.
 			<p>&copy; 2026 <a href="https://win-vector.com/">Win Vector LLC</a></p>
 		</footer>
 
-		<!-- This page `/blog/batting-estimation-stan/baseball_stats/` was built on 2026-05-21T01:11:50.163Z -->
+		<!-- This page `/blog/batting-estimation-stan/baseball_stats/` was built on 2026-05-21T17:08:56.147Z -->
 		<script type="module" src="/WVExamples/dist/rJ3_G-2ArF.js"></script>
 	</body>
 </html>

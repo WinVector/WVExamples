@@ -283,7 +283,7 @@ naive_top10
 
 Do you trust this ranking? Probably not---notice that most of the players in the top ten using this naive measure have actually been at bat very few times, and their batting averages are unrealistically high. Remember: the average batting average in the league for this season is 0.23, and the standard deviation is small. Batting averages of 1.0 or even 0.5 are highly improbable estimates of actual player ability.
 
-This is analogous to sorting the rankings of a product on an online shopping site. Which assessment would you consider more reliable: 
+This is analogous to sorting the rankings of a product on an online shopping site[^2_1]. Which assessment would you consider more reliable: 
 * one with a five-star average rating calculated from only one or two ratings, 
 * or one with a 4.5 star rating calculated from 200 ratings? 
 
@@ -292,6 +292,8 @@ Personally, I would be more likely to trust the assesment of the second product.
 Given that our observations of the players are so uneven, is there a better way estimate how good a batter each player really is?
 
 We would like a method that handles players with very few observations in a reasonable way. If a player has been at bat only once, their observed batting average is either 1 or 0: either they look perfect, or they look terrible. Since they are most likely neither, we'd like to assume a reasonable estimate of their batting ability, one we can use while we are waiting for more data. And of course, we want a method where the estimate improves as more data becomes available.
+
+[^2_1]: See Evan Miller's article [How Not To Sort By Average Rating](https://www.evanmiller.org/how-not-to-sort-by-average-rating.html) for an alternative, frequentist solution to the  "sort by rating" problem, in the context of product reviews.<br>
 
 ## Estimating Batting Ability with Probabilistic Modeling
 
@@ -332,8 +334,7 @@ To continue: we want to model the "global player batting ability" as a distribut
 
 In Bayesian parlance, the distribution `beta(a, b)` represents the *priors* on `gamma` (player batting ability). For a player with only a few at-bats, there is little information on their individual ability, so the model will estimate that their batting ability is near some average batting ability. For players with many at-bats, the model will have enough information to pull the estimate away from the grand mean.
 
-Intuitively, the  parameters `a` and `b` represent `a` "pseudo-hits" for `a+b` "pseudo-atbats". The larger `a+b` is, the more observations will be required to pull a player's estimated ability away from the 
-grand mean (`a/(a+b)`). In other words, this formulation smooths all the estimated batting averages towards some (estimated) grand mean. The quantity `a+b` specifies the strength of the smoothing.
+Intuitively, the  parameters `a` and `b` represent `a` "pseudo-hits" for `a+b` "pseudo-atbats". The larger `a+b` is, the more observations will be required to pull a player's estimated ability away from the grand mean (`a/(a+b)`). In other words, this formulation smooths all the estimated batting averages towards some (estimated) grand mean. The quantity `a+b` specifies the strength of the smoothing.
 
 We can control how much we smooth to the mean, and what the mean is, by explicitly picking `a` and `b`. In this model, however, we will use Stan to estimate `a` and `b` from the data.
 
@@ -409,6 +410,8 @@ Mean global batting ability estimate: 0.244, compared to observed mean batting a
 
 
 The mean of `beta` is generally between 0.24 and 0.25, which is not far from the observed mean batting average of 0.23. The large number of pseudo-observations corresponds to beta distributions with fairly low variance, which is again consistent with our empirical observation. It also means that there will be a lot of smoothing on the estimates.
+
+As a sidenote, it is often common practice to add tight priors to `a` and `b`---that is, to force `a+b` to be small. This is both to keep the priors "uninformative," as in frequentist formulations, and to force the probability estimates to be close to the empirical observations. As we will see later in this article, allowing Stan to pick `a` and `b` such that `a+b` is large, reduced the variance on ability estimates, but in a way that is consistent with the real-world batting performances. Less smoothing on the estimates would have led to too much variance in batting performance.
 
 ## Estimating Batting Ability
 

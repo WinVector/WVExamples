@@ -136,6 +136,11 @@ battingf
 <p>656 rows × 4 columns</p>
 </div>
 
+We can calculate some summary statistics, too.
+
+<details>
+<summary>Click to see code</summary>
+
 ```python
 nplayers = battingf.shape[0]
 print(f'Population of {nplayers} players.')
@@ -148,6 +153,8 @@ mean_atbat = battingf['atbat'].mean()
 std_atbat = battingf['atbat'].std()
 print(f'Mean at bats: {mean_atbat:.2f}, standard deviation {std_atbat:.2f}')
 ```
+</details>
+
 ```
     Population of 656 players.
     Mean batting average: 0.23, standard deviation 0.07
@@ -372,6 +379,8 @@ Let's look at Stan's estimates for `a` and `b`. Do we get reasonable distributio
 
 As a diagnostic on the model, we would like to see that the distributions of both `a` and `b` are unimodal (which they are, but for brevity the plots are omitted). We'd also like to see that the mean of the beta distribution is near the observed mean batting average in every sample.
 
+<details>
+<summary>Click to see code</summary>
 
 ```python
 ## check the a and b estimates. 
@@ -386,6 +395,7 @@ print(f"""
       Mean global batting ability estimate: {abframe['global_ba'].mean():.3f}, compared to observed mean batting average {mean_ba:.3f}
 """)
 ```
+</details>
 
 ```    
 
@@ -411,9 +421,6 @@ batting_estimates.columns = battingf['playerID']
 batting_estimates
 ```
 
-
-
-
 <div>
 <style scoped>
     .dataframe tbody tr th:only-of-type {
@@ -435,10 +442,10 @@ batting_estimates
       <th>abramcj01</th>
       <th>abreujo02</th>
       <th>abreuwi02</th>
-      <th>acunaro01</th>
-      <th>adamewi01</th>
-      <th>adamsjo03</th>
       <th>...</th>
+      <th>youngja03</th>
+      <th>zavalse01</th>
+      <th>zuninmi01</th>
     </tr>
   </thead>
   <tbody>
@@ -447,50 +454,50 @@ batting_estimates
       <td>0.255413</td>
       <td>0.248422</td>
       <td>0.258750</td>
-      <td>0.308997</td>
-      <td>0.228818</td>
-      <td>0.211759</td>
       <td>...</td>
+      <td>0.253605</td>
+      <td>0.227349</td>
+      <td>0.222809</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0.244398</td>
       <td>0.217937</td>
       <td>0.251756</td>
-      <td>0.298012</td>
-      <td>0.226152</td>
-      <td>0.250242</td>
       <td>...</td>
+      <td>0.283892</td>
+      <td>0.217628</td>
+      <td>0.237123</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0.243953</td>
       <td>0.258032</td>
       <td>0.263147</td>
-      <td>0.296633</td>
-      <td>0.230742</td>
-      <td>0.226632</td>
       <td>...</td>
+      <td>0.208346</td>
+      <td>0.220289</td>
+      <td>0.219931</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0.249291</td>
       <td>0.242690</td>
       <td>0.261040</td>
-      <td>0.310948</td>
-      <td>0.230661</td>
-      <td>0.217918</td>
       <td>...</td>
+      <td>0.265126</td>
+      <td>0.221886</td>
+      <td>0.227214</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0.237667</td>
       <td>0.251283</td>
       <td>0.240370</td>
-      <td>0.290025</td>
-      <td>0.222474</td>
-      <td>0.273592</td>
       <td>...</td>
+      <td>0.233977</td>
+      <td>0.219615</td>
+      <td>0.237419</td>
     </tr>
     <tr>
       <th>...</th>
@@ -502,16 +509,68 @@ batting_estimates
       <td>...</td>
       <td>...</td>
     </tr>
+    <tr>
+      <th>3995</th>
+      <td>0.259563</td>
+      <td>0.245729</td>
+      <td>0.300755</td>
+      <td>...</td>
+      <td>0.223936</td>
+      <td>0.206689</td>
+      <td>0.249676</td>
+    </tr>
+    <tr>
+      <th>3996</th>
+      <td>0.245689</td>
+      <td>0.236702</td>
+      <td>0.238916</td>
+      <td>...</td>
+      <td>0.249938</td>
+      <td>0.214311</td>
+      <td>0.234321</td>
+    </tr>
+    <tr>
+      <th>3997</th>
+      <td>0.224689</td>
+      <td>0.227445</td>
+      <td>0.234514</td>
+      <td>...</td>
+      <td>0.274076</td>
+      <td>0.252756</td>
+      <td>0.234653</td>
+    </tr>
+    <tr>
+      <th>3998</th>
+      <td>0.228148</td>
+      <td>0.233065</td>
+      <td>0.252618</td>
+      <td>...</td>
+      <td>0.233102</td>
+      <td>0.257751</td>
+      <td>0.235676</td>
+    </tr>
+    <tr>
+      <th>3999</th>
+      <td>0.263306</td>
+      <td>0.248453</td>
+      <td>0.251055</td>
+      <td>...</td>
+      <td>0.256680</td>
+      <td>0.194360</td>
+      <td>0.225084</td>
     </tr>
   </tbody>
 </table>
 <p>4000 rows × 656 columns</p>
 </div>
+<p class="caption">Each row represents a combination of player batting abilities that is consistent with the training data.</p>
 
 
 
 For every player, we can use the above set of Stan estimates to get a point estimate of their gamma (we'll use the mean; you can also use the median), and an uncertainty interval that covers 95% of the Stan estimates.
 
+<details>
+<summary>Click to see code</summary>
 
 ```python
 
@@ -528,10 +587,8 @@ battingf['g_max'] = interval_top
 
 battingf
 
-
 ```
-
-
+</details>
 
 
 <div>
@@ -676,6 +733,7 @@ battingf
 </table>
 <p>656 rows × 7 columns</p>
 </div>
+<p class="caption">Point estimates of batting abilities, along with upper and lower bounds on 95% uncertainty intervals</p>
 
 ### The Top 10 Batters, According to Stan
 
@@ -1087,6 +1145,8 @@ If our goal is in fact to choose the player(s) with the highest batting ability,
 
 Below, we find the best player in every Stan sample, and pick our top 10 accordingly. We could of course pick the top 10 in each possible world, and draw our "most likely top 10" from the resulting sets, but picking the single best is easier to code, and gets the point across.
 
+<details>
+<summary>Click to see code</summary>
 
 ```python
 # get the best performance in each sample world
@@ -1106,6 +1166,7 @@ battingf = battingf.merge(mean_best, on='playerID')
 top10_by_frac = battingf.nlargest(10, 'frac_as_best')
 top10_by_frac[['playerID', 'frac_as_best', 'batting_avg', 'gamma']]
 ```
+</details>
 
 <div>
 <style scoped>
@@ -1210,8 +1271,10 @@ top10_by_frac[['playerID', 'frac_as_best', 'batting_avg', 'gamma']]
 
 This is substantially the same set of players as were selected by looking just at the point estimates. That's good! It gives us confidence that these are indeed the players with the highest batting ability.
 
-Let's mark the players who show up in the top 10, by either criterion.
+Let's mark the players who show up in the top 10, by either criterion. We'll also check for differences in the two top 10 sets.
 
+<details>
+<summary>Click to see code</summary>
 
 ```python
 top10_by_frac = set(battingf.nlargest(10, 'frac_as_best')['playerID'])
@@ -1227,6 +1290,8 @@ in_top10 = battingf['playerID'].isin(in_top10_set)
 battingf['in_top10'] = in_top10.astype(str)
 battingf.loc[battingf['in_top10']=='True', ['playerID', 'atbat', 'hits', 'batting_avg', 'gamma', 'frac_as_best']]
 ```
+</details>
+
 ```
     Picked by point estimate but not by fraction best: set()
     Picked by fraction best but not by point estimate: set()
@@ -1368,7 +1433,7 @@ There are a few things to note in this graph. First, the ranking of ability esti
 
 So if the goal of estimating player ability is to identify the best players, then this model has been able to do so. It automatically discounts spurious empirical estimates that are likely inaccurate due to insufficient data, without the analyst having to specify what "insufficient data" is in an ad-hoc way. It also provides reasonable assumptions about the abilities of low information (low at-bat) players---assumptions that are based on the population data.
 
-## Matching the model to reality
+## Comparing the Model to Reality
 
 Here are the three players who were most often ranked best in a Stan sample.
 
@@ -1443,6 +1508,8 @@ The next two players (as ranked by probability of being best) are Ronald Acuña,
 
 Let's further compare Stan's batting ability estimates with observations from the data.
 
+<details>
+<summary>Click to see code</summary>
 
 ```python
 mean_ability = battingf['gamma'].mean()
@@ -1451,6 +1518,8 @@ std_ability = battingf['gamma'].std()
 print(f'Mean observed batting average: {mean_ba:.3f}, standard deviation {std_ba:.3f}.')
 print(f'Mean estimated batting ability: {mean_ability:.3f}, standard deviation {std_ability:.3f}.')
 ```
+</details>
+
 ```
 Mean observed batting average: 0.227, standard deviation 0.075.
 Mean estimated batting ability: 0.244, standard deviation 0.012.
@@ -1462,6 +1531,8 @@ This is not surprising: we also know that the number of player at-bats varied wi
 
 In order to properly compare Stan's ability estimates to actual observations, we have to simulate the season in each Stan sample. That is, in each possible world, we give each player the same number of at-bats as they had in 2023, and generate a plausible observed batting average, given that number of at-bats. This is shown below.
 
+<details>
+<summary>Click to see code</summary>
 
 ```python
 def draw_synthetic_hitrate (atbat, bavec):
@@ -1474,7 +1545,7 @@ synthetic_hitrate_frame = pd.DataFrame({
 
 synthetic_hitrate_frame
 ```
-
+</details>
 
 
 
@@ -1624,6 +1695,9 @@ synthetic_hitrate_frame
 
 From these synthetic replays of 2023, we can estimate plausible means and standard deviations of observed batting average.
 
+<details>
+<summary>Click to see code</summary>
+
 ```python
 # get the mean and standard devation on ability for each sample world
 mean_synth_vec = synthetic_hitrate_frame.mean(axis=1)
@@ -1637,6 +1711,8 @@ print(f'Mean observed batting average: {mean_ba:.3f}, standard deviation {std_ba
 print(f'Mean synthetic batting average observations: {mean_synth:.3f}, standard deviation {std_synth:.3f}.')
 
 ```
+</details>
+
 ```
 Mean observed batting average: 0.227, standard deviation 0.075.
 Mean synthetic batting average observations: 0.244, standard deviation 0.078.
@@ -1649,9 +1725,11 @@ This is much closer to what was actually observed! We can also plot the distribu
 
 Once we simulate the at-bats, the behaviors in the synthetic worlds are consistent with what was observed in the actual data: observed batting averages vary more widely than innate batting abilities. This also gives us confidence that our model is a reasonable approximation of the real world baseball hit generation process. Specifically, it's an approximation we can use to answer the questions we want to ask, like "who are the best batters?".
 
-## Estimate what you want to know, not just what you can observe
+## Estimate What You Want to Know, Not Just What You Can Observe
 
-As we've seen in the above example, an advantage of probabilistic modeling is that the analyst is able to distinguish between *observations* and (potentially unobservable) *quantities of interest*. If you, the analyst, can describe a probabilistic process that relates **_what you can see_** to **_what you actually need to know_**, then probabilistic modeling programs like Stan can estimate these quantities for you. By specifying the process to describe your problem and your task goal, you can add in prior knowledge or assumptions about the domain in a principled, documentable way, without having to resort to ad-hoc tweaks or data processing. 
+As we've seen in the above example, an advantage of probabilistic modeling is that the analyst is able to distinguish between *observations* and (potentially unobservable) *quantities of interest*. If you, the analyst, can describe a probabilistic process that relates **_what you can see_** to **_what you actually need to know_**, then probabilistic modeling programs like Stan can estimate these quantities for you. 
+
+By specifying the process to describe your problem and your task goal, you can add in prior knowledge or assumptions about the domain in a principled, documentable way, without having to resort to ad-hoc tweaks or data processing. 
 
 In addition, probabilistic modeling systems that are based on Monte Carlo sampling (like Stan) provide samples of "possible worlds" that are consistent with the training data. You can use these samples not only to calculate point estimates of quantities of interest, but also uncertainty intervals around those estimates. You can also use the possible worlds to run simulations and scenarios (like, "who are the top 10 players in each possible world?") to further help you in decision-making. 
 
